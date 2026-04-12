@@ -1,0 +1,2083 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GameForge</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+/* ===== Light Theme ===== */
+:root{
+  --bg:#ffffff;--bg-secondary:#f9fafb;--bg-tertiary:#f3f4f6;
+  --border:#e5e7eb;--border-hover:#d1d5db;
+  --text:#111827;--text-secondary:#6b7280;--text-tertiary:#9ca3af;
+  --accent:#111827;--accent-hover:#374151;
+  --blue:#2563eb;--blue-hover:#1d4ed8;--blue-bg:#eff6ff;--blue-border:#bfdbfe;
+  --green:#059669;--green-bg:#ecfdf5;--green-border:#a7f3d0;
+  --red:#dc2626;--red-bg:#fef2f2;--red-border:#fecaca;
+  --yellow:#d97706;--yellow-bg:#fffbeb;--yellow-border:#fde68a;
+  --radius:8px;--radius-lg:12px;
+  --shadow:0 1px 2px rgba(0,0,0,0.05);--shadow-md:0 4px 6px -1px rgba(0,0,0,0.07),0 2px 4px -2px rgba(0,0,0,0.05);
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  --mono:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;
+  --toc-bg:var(--bg);--toc-border:var(--border);--toc-active:var(--blue-bg);
+  --modal-bg:rgba(0,0,0,0.4);
+  --scrollbar-thumb:#d1d5db;--scrollbar-track:transparent;
+}
+
+/* ===== Dark Theme ===== */
+[data-theme="dark"]{
+  --bg:#1a1a2e;--bg-secondary:#16213e;--bg-tertiary:#0f3460;
+  --border:#2a2a4a;--border-hover:#3a3a5a;
+  --text:#e0e0e0;--text-secondary:#a0a0b8;--text-tertiary:#6a6a8a;
+  --accent:#e0e0e0;--accent-hover:#c0c0d0;
+  --blue:#4dabf7;--blue-hover:#339af0;--blue-bg:#1a2744;--blue-border:#2a3a5a;
+  --green:#51cf66;--green-bg:#1a2e1a;--green-border:#2a4a2a;
+  --red:#ff6b6b;--red-bg:#2e1a1a;--red-border:#4a2a2a;
+  --yellow:#ffd43b;--yellow-bg:#2e2a1a;--yellow-border:#4a3a2a;
+  --shadow:0 1px 2px rgba(0,0,0,0.3);--shadow-md:0 4px 6px -1px rgba(0,0,0,0.4);
+  --toc-bg:var(--bg-secondary);--toc-border:var(--border);--toc-active:var(--blue-bg);
+  --modal-bg:rgba(0,0,0,0.6);
+  --scrollbar-thumb:#3a3a5a;--scrollbar-track:transparent;
+}
+
+html{font-size:16px;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body{font-family:var(--font);background:var(--bg-secondary);color:var(--text);line-height:1.6;min-height:100vh}
+a{color:var(--blue);text-decoration:none}
+button{font-family:var(--font);cursor:pointer}
+input,select,textarea{font-family:var(--font)}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--scrollbar-track)}
+::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb);border-radius:3px}
+
+/* Layout */
+.app{display:flex;flex-direction:column;min-height:100vh}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;background:var(--bg);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.topbar-left{display:flex;align-items:center;gap:16px}
+.topbar-logo{font-size:15px;font-weight:700;letter-spacing:-0.3px;color:var(--text)}
+.topbar-logo span{color:var(--text-tertiary);font-weight:400}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.main{flex:1;display:flex;justify-content:center;padding:32px 24px 64px}
+.container{width:100%;max-width:720px}
+
+/* Result layout with TOC */
+.result-layout{display:flex;gap:0;max-width:1100px;width:100%;margin:0 auto}
+.result-main{flex:1;min-width:0}
+.toc-sidebar{width:220px;flex-shrink:0;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;background:var(--toc-bg);border-left:1px solid var(--toc-border);padding:16px 0}
+.toc-sidebar h4{font-size:11px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.5px;padding:0 16px;margin-bottom:8px}
+.toc-item{display:block;padding:6px 16px;font-size:13px;color:var(--text-secondary);cursor:pointer;border-left:2px solid transparent;transition:all .15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.toc-item:hover{color:var(--text);background:var(--bg-secondary)}
+.toc-item.active{color:var(--blue);border-left-color:var(--blue);background:var(--toc-active);font-weight:500}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius);font-size:14px;font-weight:500;border:1px solid transparent;transition:all .15s ease;line-height:1.4}
+.btn:active{transform:scale(0.98)}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:var(--accent-hover)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-secondary{background:var(--bg);color:var(--text);border-color:var(--border)}
+.btn-secondary:hover{background:var(--bg-secondary);border-color:var(--border-hover)}
+.btn-ghost{background:transparent;color:var(--text-secondary);border-color:transparent}
+.btn-ghost:hover{color:var(--text);background:var(--bg-secondary)}
+.btn-danger{background:transparent;color:var(--red);border-color:var(--red-border)}
+.btn-danger:hover{background:var(--red-bg)}
+.btn-blue{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-blue:hover{background:var(--blue-hover)}
+.btn-sm{padding:5px 10px;font-size:13px}
+.btn-lg{padding:10px 20px;font-size:15px}
+.btn-block{width:100%;justify-content:center}
+.btn-icon{width:32px;height:32px;padding:0;justify-content:center;border-radius:var(--radius)}
+
+/* Cards */
+.card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:16px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.card-title{font-size:15px;font-weight:600;color:var(--text)}
+
+/* Form */
+.form-group{margin-bottom:16px}
+.form-group:last-child{margin-bottom:0}
+.form-label{display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px}
+.form-label .required{color:var(--red);margin-left:1px}
+.form-hint{font-size:12px;color:var(--text-tertiary);margin-top:4px}
+.form-input,.form-select,.form-textarea{width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);font-size:14px;color:var(--text);outline:none;transition:border-color .15s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,0.1)}
+.form-input::placeholder,.form-textarea::placeholder{color:var(--text-tertiary)}
+.form-textarea{min-height:120px;resize:vertical;line-height:1.6}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.form-select option{background:var(--bg);color:var(--text)}
+.form-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.form-error{font-size:12px;color:var(--red);margin-top:4px;display:none}
+.form-error.show{display:block}
+
+/* API Config */
+.api-status{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:4px 10px;border-radius:100px}
+.api-status.connected{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.api-status.disconnected{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.api-status .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.config-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.config-grid .full{grid-column:1/-1}
+.provider-tabs{display:flex;gap:4px;margin-bottom:16px;padding:3px;background:var(--bg-secondary);border-radius:var(--radius);border:1px solid var(--border)}
+.provider-tab{flex:1;padding:7px 12px;border-radius:6px;font-size:13px;font-weight:500;color:var(--text-secondary);background:transparent;border:none;text-align:center;transition:all .15s}
+.provider-tab:hover{color:var(--text)}
+.provider-tab.active{background:var(--bg);color:var(--text);box-shadow:var(--shadow)}
+.config-section{display:none}
+.config-section.active{display:block}
+.key-input-wrap{display:flex;gap:8px}
+.key-input-wrap .form-input{flex:1;font-family:var(--mono);font-size:13px}
+.test-result{margin-top:12px;padding:10px 14px;border-radius:var(--radius);font-size:13px;display:none;white-space:pre-line}
+.test-result.success{display:block;background:var(--green-bg);border:1px solid var(--green-border);color:var(--green)}
+.test-result.error{display:block;background:var(--red-bg);border:1px solid var(--red-border);color:var(--red)}
+
+/* Empty State */
+.empty-state{text-align:center;padding:48px 24px}
+.empty-state-icon{width:48px;height:48px;margin:0 auto 16px;background:var(--bg-secondary);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;font-size:20px}
+.empty-state h3{font-size:16px;font-weight:600;margin-bottom:6px}
+.empty-state p{font-size:14px;color:var(--text-secondary);max-width:360px;margin:0 auto}
+
+/* Result */
+.result-section{display:none}
+.result-section.show{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.result-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:0;flex-wrap:wrap;gap:8px}
+.result-toolbar-left{display:flex;align-items:center;gap:8px}
+.result-toolbar-right{display:flex;align-items:center;gap:4px}
+.doc-content{background:var(--bg-secondary);border:1px solid var(--border);border-radius:0;min-height:400px;padding:32px;font-size:14px;line-height:1.8;max-height:70vh;overflow-y:auto}
+.doc-content.editable{outline:none;cursor:text;border-color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue)}
+.doc-content h1{font-size:22px;font-weight:700;margin-bottom:6px;color:var(--text)}
+.doc-content .doc-meta{font-size:12px;color:var(--text-tertiary);margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.doc-content h2{font-size:16px;font-weight:600;margin:28px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border);color:var(--text);position:relative}
+.doc-content h3{font-size:14px;font-weight:600;margin:16px 0 8px;color:var(--text)}
+.doc-content p{color:var(--text-secondary);margin-bottom:10px}
+.doc-content ul,.doc-content ol{color:var(--text-secondary);padding-left:20px;margin-bottom:10px}
+.doc-content li{margin-bottom:4px}
+.doc-content strong{color:var(--text);font-weight:600}
+.doc-content code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:12px;font-family:var(--mono);color:var(--text-secondary);border:1px solid var(--border)}
+.doc-content table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+.doc-content th,.doc-content td{padding:8px 12px;text-align:left;border:1px solid var(--border)}
+.doc-content th{background:var(--bg);font-weight:600;color:var(--text);font-size:12px;text-transform:uppercase;letter-spacing:.3px}
+.doc-content td{color:var(--text-secondary)}
+.doc-content .highlight-box{background:var(--blue-bg);border-left:3px solid var(--blue);padding:12px 16px;border-radius:0 var(--radius) var(--radius) 0;margin:12px 0}
+.doc-content .highlight-box p{color:var(--text-secondary);margin:0;font-size:13px}
+.doc-content blockquote{border-left:3px solid var(--border);padding-left:16px;color:var(--text-secondary);margin:12px 0}
+
+/* Section regenerate button */
+.section-regen-btn{position:absolute;right:0;top:50%;transform:translateY(-50%);width:20px;height:20px;border:none;background:var(--bg);border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;color:var(--text-tertiary)}
+.doc-content:hover .section-regen-btn{opacity:1}
+.section-regen-btn:hover{background:var(--blue-bg);border-color:var(--blue);color:var(--blue)}
+.section-regen-btn.loading{opacity:1;pointer-events:none}
+
+/* Follow-up bar */
+.followup-bar{display:flex;gap:8px;align-items:center;padding:12px 24px;border-top:1px solid var(--border);background:var(--bg)}
+.followup-bar .form-input{flex:1}
+.followup-hint{font-size:11px;color:var(--text-tertiary);padding:0 24px 8px;background:var(--bg);border-top:1px solid var(--border)}
+
+/* Import modal file upload */
+.file-upload-area{border:2px dashed var(--border);border-radius:var(--radius);padding:24px;text-align:center;cursor:pointer;transition:all .15s;margin-top:12px}
+.file-upload-area:hover{border-color:var(--blue);background:var(--blue-bg)}
+.file-upload-area input{display:none}
+
+/* Streaming */
+.streaming-cursor::after{content:'▊';animation:blink 1s step-end infinite;color:var(--text-tertiary)}
+@keyframes blink{50%{opacity:0}}
+
+/* Toast */
+.toast-container{position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{display:flex;align-items:center;gap:8px;padding:12px 16px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 4px 12px rgba(0,0,0,0.1);font-size:13px;color:var(--text);animation:toastIn .2s ease;min-width:240px}
+.toast.success{border-color:var(--green-border)}
+.toast.error{border-color:var(--red-border)}
+.toast.info{border-color:var(--blue-border)}
+.toast-close{margin-left:auto;background:none;border:none;color:var(--text-tertiary);cursor:pointer;font-size:14px;padding:2px}
+@keyframes toastIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:var(--modal-bg);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:var(--bg);border-radius:var(--radius-lg);box-shadow:0 20px 60px rgba(0,0,0,0.15);width:90%;max-width:560px;max-height:85vh;overflow-y:auto;animation:modalIn .2s ease}
+.modal-wide{max-width:720px}
+@keyframes modalIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 0}
+.modal-header h2{font-size:16px;font-weight:600}
+.modal-body{padding:20px 24px}
+.modal-footer{padding:0 24px 20px;display:flex;justify-content:flex-end;gap:8px}
+
+/* Divider */
+.divider{height:1px;background:var(--border);margin:20px 0}
+
+/* Badge */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:100px;font-size:11px;font-weight:500}
+.badge-blue{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+.badge-green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+
+/* History */
+.history-item{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:all .15s;margin-bottom:8px}
+.history-item:hover{border-color:var(--border-hover);background:var(--bg-secondary)}
+.history-item-info{flex:1;min-width:0}
+.history-item-title{font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.history-item-meta{font-size:12px;color:var(--text-tertiary);margin-top:2px}
+.history-item-delete{background:none;border:none;color:var(--text-tertiary);cursor:pointer;font-size:14px;padding:4px;border-radius:4px;opacity:0;transition:all .15s}
+.history-item:hover .history-item-delete{opacity:1}
+.history-item-delete:hover{color:var(--red);background:var(--red-bg)}
+
+/* Template Library */
+.template-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.template-card{padding:14px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:all .15s}
+.template-card:hover{border-color:var(--blue);background:var(--blue-bg)}
+.template-card.selected{border-color:var(--blue);background:var(--blue-bg);box-shadow:0 0 0 1px var(--blue)}
+.template-card-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
+.template-card-desc{font-size:12px;color:var(--text-tertiary);line-height:1.5}
+
+/* Prompt Editor */
+.prompt-editor{width:100%;min-height:200px;max-height:400px;font-family:var(--mono);font-size:13px;line-height:1.6;padding:12px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);resize:vertical;outline:none}
+.prompt-editor:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,0.1)}
+.prompt-presets{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.prompt-preset-btn{padding:4px 10px;border-radius:100px;font-size:12px;font-weight:500;border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);cursor:pointer;transition:all .15s}
+.prompt-preset-btn:hover{border-color:var(--blue);color:var(--blue)}
+.prompt-preset-btn.active{border-color:var(--blue);background:var(--blue-bg);color:var(--blue)}
+
+/* AI Polish */
+.polish-bar{display:flex;gap:8px;align-items:center;padding:12px 16px;background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--radius);margin-top:12px}
+.polish-bar .form-input{flex:1}
+
+/* Theme toggle */
+.theme-toggle{position:relative;width:36px;height:20px;border-radius:10px;background:var(--border);border:none;cursor:pointer;transition:background .2s}
+.theme-toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 2px rgba(0,0,0,0.2)}
+.theme-toggle.dark{background:var(--blue)}
+.theme-toggle.dark::after{transform:translateX(16px)}
+
+/* Lang switch */
+.lang-switch{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-secondary);background:none;border:1px solid var(--border);border-radius:var(--radius);padding:4px 8px;cursor:pointer}
+.lang-switch:hover{border-color:var(--border-hover)}
+.lang-switch code{font-size:11px;font-weight:600;color:var(--text)}
+
+/* Collapsible */
+.collapsible-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:8px 0;user-select:none}
+.collapsible-header:hover{color:var(--text)}
+.collapsible-arrow{transition:transform .2s;font-size:10px;color:var(--text-tertiary)}
+.collapsible-arrow.open{transform:rotate(90deg)}
+.collapsible-body{overflow:hidden;max-height:0;transition:max-height .3s ease}
+.collapsible-body.open{max-height:600px}
+
+/* Print styles */
+@media print{
+  body{background:#fff!important;color:#000!important}
+  .topbar,.toast-container,.result-toolbar,.doc-footer-bar,.toc-sidebar,.footer-bar,.followup-bar,.followup-hint,.polish-bar{display:none!important}
+  .main{padding:0!important}
+  .result-layout{max-width:100%!important}
+  .doc-content{max-height:none!important;overflow:visible!important;border:none!important;padding:0!important;background:#fff!important;box-shadow:none!important}
+  .doc-content h2{border-bottom:2px solid #333!important;color:#000!important}
+  .doc-content h3{color:#000!important}
+  .doc-content p,.doc-content li,.doc-content td{color:#333!important}
+  .doc-content strong{color:#000!important}
+  .doc-content table{border-color:#ccc!important}
+  .doc-content th,.doc-content td{border-color:#ccc!important}
+  .doc-content th{background:#f0f0f0!important;color:#000!important}
+  .doc-content blockquote{border-color:#ccc!important}
+  .doc-content code{background:#f5f5f5!important;border-color:#ddd!important;color:#333!important}
+  .result-section{display:block!important}
+  .card{border:none!important;box-shadow:none!important;padding:0!important;margin:0!important}
+  .modal-overlay{display:none!important}
+  @page{margin:2cm;size:A4}
+}
+
+/* Responsive */
+@media(max-width:900px){
+  .toc-sidebar{display:none}
+}
+@media(max-width:640px){
+  .topbar{padding:0 16px}
+  .main{padding:20px 16px 48px}
+  .card{padding:20px}
+  .form-row{grid-template-columns:1fr}
+  .config-grid{grid-template-columns:1fr}
+  .result-toolbar{flex-direction:column;align-items:flex-start}
+  .doc-content{padding:20px}
+  .template-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- Top Bar -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-logo">GameForge <span data-i18n="logo_sub">/ 游戏企划工坊</span></div>
+  </div>
+  <div class="topbar-right">
+    <div id="apiStatus" class="api-status disconnected"><span class="dot"></span><span data-i18n="api_not_configured">未配置</span></div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme"></button>
+    <button class="lang-switch" onclick="toggleLang()"><span id="langLabel">EN</span></button>
+    <button class="btn btn-secondary btn-sm" onclick="openConfigModal()" data-i18n="settings">设置</button>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+<div class="container">
+
+  <!-- API Not Configured -->
+  <div id="emptyState" class="empty-state">
+    <div class="empty-state-icon">⚙</div>
+    <h3 data-i18n="empty_title">开始使用前，请先配置 API</h3>
+    <p data-i18n="empty_desc">GameForge 需要接入大语言模型来生成专业的游戏设计文档。支持 OpenAI、Claude 及兼容接口。</p>
+    <button class="btn btn-primary" style="margin-top:20px" onclick="openConfigModal()" data-i18n="config_api">配置 API</button>
+  </div>
+
+  <!-- Input Section -->
+  <div id="inputSection" style="display:none">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title" data-i18n="new_project">新建企划</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="openImportModal()" data-i18n="import_doc">导入文档</button>
+          <button class="btn btn-ghost btn-sm" onclick="openTemplateModal()" data-i18n="template_library">模板库</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" data-i18n="game_idea">游戏创意 <span class="required">*</span></label>
+        <textarea class="form-textarea" id="gameIdea" data-i18n-placeholder="idea_placeholder" placeholder="描述你的游戏创意。越详细越好——可以包含玩法、故事、美术风格、目标受众等任何想法。"></textarea>
+        <div class="form-error" id="ideaError" data-i18n="idea_required">请输入游戏创意</div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" data-i18n="game_genre">游戏类型</label>
+          <select class="form-select" id="gameGenre"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="target_players">目标玩家</label>
+          <select class="form-select" id="targetPlayers"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="dev_cycle">开发周期</label>
+          <select class="form-select" id="devCycle"></select>
+        </div>
+      </div>
+
+      <!-- Prompt Customization (collapsible) -->
+      <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:16px">
+        <div class="collapsible-header" onclick="toggleCollapsible('promptSection')">
+          <span style="font-size:13px;font-weight:500;color:var(--text-secondary)" data-i18n="custom_prompt">自定义 Prompt</span>
+          <span class="collapsible-arrow" id="promptSection_arrow">▶</span>
+        </div>
+        <div class="collapsible-body" id="promptSection">
+          <div class="prompt-presets" id="promptPresets"></div>
+          <textarea class="prompt-editor" id="customPromptEditor" data-i18n-placeholder="prompt_placeholder" placeholder="在此编辑系统提示词..."></textarea>
+          <div class="form-hint" style="margin-top:6px" data-i18n="prompt_hint">选择预设模板或直接编辑提示词。留空则使用默认提示词。</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:20px">
+        <button class="btn btn-primary btn-lg" id="generateBtn" onclick="generateDocument()" style="flex:1" data-i18n="generate">生成企划</button>
+        <button class="btn btn-secondary btn-lg" onclick="clearForm()" data-i18n="clear">清空</button>
+      </div>
+    </div>
+
+    <!-- History -->
+    <div id="historySection" class="card" style="display:none">
+      <div class="card-header">
+        <div class="card-title" data-i18n="history">历史记录</div>
+        <button class="btn btn-ghost btn-sm" onclick="clearHistory()" data-i18n="clear_all">清空</button>
+      </div>
+      <div id="historyList"></div>
+    </div>
+  </div>
+
+  <!-- Result Section -->
+  <div id="resultSection" class="result-section">
+    <div class="result-layout">
+      <div class="result-main">
+        <div class="card" style="padding:0;overflow:hidden">
+          <div style="padding:20px 24px;border-bottom:1px solid var(--border)">
+            <div class="result-toolbar">
+              <div class="result-toolbar-left">
+                <span class="card-title" style="margin:0" data-i18n="gdd_title">游戏设计文档</span>
+                <span id="resultBadge" class="badge badge-green" style="display:none" data-i18n="completed">已完成</span>
+                <span id="streamingBadge" class="badge badge-blue" style="display:none" data-i18n="generating">生成中...</span>
+              </div>
+              <div class="result-toolbar-right">
+                <button class="btn btn-ghost btn-sm" id="editToggleBtn" onclick="toggleEditMode()" data-i18n="edit">编辑</button>
+                <button class="btn btn-ghost btn-icon" onclick="copyAll()" title="Copy">📋</button>
+                <button class="btn btn-ghost btn-icon" onclick="copySoloPrompt()" title="SOLO Prompt">🤖</button>
+                <button class="btn btn-ghost btn-icon" onclick="exportPDF()" title="PDF">📄</button>
+                <button class="btn btn-ghost btn-icon" onclick="exportWord()" title="Word">📝</button>
+                <button class="btn btn-ghost btn-icon" onclick="downloadDoc()" title="Download">↓</button>
+              </div>
+            </div>
+          </div>
+          <div class="doc-content" id="docContent"></div>
+          <!-- Follow-up bar (visible after generation) -->
+          <div id="followupSection" style="display:none">
+            <div class="followup-bar">
+              <input class="form-input" id="followupInput" data-i18n-placeholder="followup_placeholder" placeholder="输入追问，如：把竞品分析展开到10款、增加音效设计章节...">
+              <button class="btn btn-blue btn-sm" id="followupBtn" onclick="followUp()" data-i18n="followup_btn">追问</button>
+            </div>
+            <div class="followup-hint" data-i18n="followup_hint">基于当前文档继续追问，AI 会输出修改后的完整文档</div>
+          </div>
+          <!-- AI Polish Bar (visible in edit mode) -->
+          <div id="polishBar" style="display:none;padding:12px 24px;border-top:1px solid var(--border)">
+            <div class="polish-bar">
+              <input class="form-input" id="polishInput" data-i18n-placeholder="polish_placeholder" placeholder="输入润色要求，如：更详细的技术方案、增加竞品分析...">
+              <button class="btn btn-blue btn-sm" id="polishBtn" onclick="aiPolish()" data-i18n="ai_polish">AI 润色</button>
+            </div>
+          </div>
+          <div class="doc-footer-bar" style="padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-secondary btn-sm" onclick="copyAll()" data-i18n="copy_all">复制全部</button>
+            <button class="btn btn-secondary btn-sm" onclick="copySoloPrompt()" data-i18n="copy_solo">复制 SOLO Prompt</button>
+            <button class="btn btn-secondary btn-sm" onclick="exportPDF()" data-i18n="export_pdf">导出 PDF</button>
+            <button class="btn btn-secondary btn-sm" onclick="exportWord()" data-i18n="export_word">导出 Word</button>
+            <button class="btn btn-secondary btn-sm" onclick="downloadDoc()" data-i18n="download_md">下载 .md</button>
+            <div style="flex:1"></div>
+            <button class="btn btn-ghost btn-sm" onclick="backToInput()" data-i18n="back">← 返回</button>
+          </div>
+        </div>
+      </div>
+      <!-- TOC Sidebar -->
+      <div class="toc-sidebar" id="tocSidebar">
+        <h4 data-i18n="toc_title">目录</h4>
+        <div id="tocList"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- Config Modal -->
+<div class="modal-overlay" id="configModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 data-i18n="api_config">API 配置</h2>
+      <button class="btn btn-ghost btn-icon" onclick="closeConfigModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="provider-tabs">
+        <button class="provider-tab active" data-provider="openai" onclick="switchProvider('openai')">OpenAI</button>
+        <button class="provider-tab" data-provider="claude" onclick="switchProvider('claude')">Claude</button>
+      </div>
+      <div class="config-section active" id="configOpenai">
+        <div class="form-group">
+          <label class="form-label" data-i18n="api_url">API 地址</label>
+          <input class="form-input" id="openaiBaseUrl" type="url" placeholder="https://api.scnet.cn/api/llm/v1">
+          <div class="form-hint" data-i18n="api_url_hint">填写完整的 API Base URL，包含 /v1 路径</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">API Key</label>
+          <div class="key-input-wrap">
+            <input class="form-input" id="openaiApiKey" type="password" placeholder="sk-...">
+            <button class="btn btn-secondary btn-sm" onclick="toggleKeyVisibility('openaiApiKey')" data-i18n="show">显示</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="model">模型</label>
+          <input class="form-input" id="openaiModel" type="text" placeholder="gpt-4o / deepseek-chat / glm-4-flash">
+          <div class="form-hint" data-i18n="model_hint">填写模型 ID，如 gpt-4o、deepseek-chat、qwen-turbo 等</div>
+        </div>
+      </div>
+      <div class="config-section" id="configClaude">
+        <div class="form-group">
+          <label class="form-label">API Key</label>
+          <div class="key-input-wrap">
+            <input class="form-input" id="claudeApiKey" type="password" placeholder="sk-ant-...">
+            <button class="btn btn-secondary btn-sm" onclick="toggleKeyVisibility('claudeApiKey')" data-i18n="show">显示</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="model">模型</label>
+          <input class="form-input" id="claudeModel" type="text" placeholder="claude-sonnet-4-20250514">
+        </div>
+      </div>
+      <div class="test-result" id="testResult"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeConfigModal()" data-i18n="cancel">取消</button>
+      <button class="btn btn-secondary" onclick="testConnection()" data-i18n="test_conn">测试连接</button>
+      <button class="btn btn-primary" onclick="saveConfig()" data-i18n="save_config">保存配置</button>
+    </div>
+  </div>
+</div>
+
+<!-- Template Library Modal -->
+<div class="modal-overlay" id="templateModal">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h2 data-i18n="template_lib_title">企划模板库</h2>
+      <button class="btn btn-ghost btn-icon" onclick="closeTemplateModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px" data-i18n="template_lib_desc">选择一个模板快速开始，模板会自动填充游戏创意和系统提示词。</p>
+      <div class="template-grid" id="templateGrid"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeTemplateModal()" data-i18n="cancel">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import Document Modal -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h2 data-i18n="import_title">导入已有文档</h2>
+      <button class="btn btn-ghost btn-icon" onclick="closeImportModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px" data-i18n="import_desc">粘贴或上传已有的游戏设计文档，在此基础上进行修改和续写。</p>
+      <div class="form-group">
+        <textarea class="form-textarea" id="importTextarea" style="min-height:240px" data-i18n-placeholder="import_paste_placeholder" placeholder="在此粘贴文档内容..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="import_upload_label">或上传文件（.md / .txt）</label>
+        <div class="file-upload-area" id="fileUploadArea" onclick="document.getElementById('importFileInput').click()">
+          <input type="file" id="importFileInput" accept=".md,.txt,.doc" onchange="handleImportFile(event)">
+          <div style="font-size:24px;margin-bottom:8px">📁</div>
+          <div style="font-size:13px;color:var(--text-secondary)" data-i18n="import_upload_label">或上传文件（.md / .txt）</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeImportModal()" data-i18n="cancel">取消</button>
+      <button class="btn btn-primary" onclick="importDocument()" data-i18n="import_btn">导入</button>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="footer-bar" style="text-align:center;padding:24px;color:var(--text-tertiary);font-size:12px;border-top:1px solid var(--border)">
+  <p>GameForge · 游戏企划工坊 &mdash; Designed by <strong style="color:var(--text-secondary)">白芨</strong></p>
+  <p style="margin-top:6px">
+    <a href="https://github.com/Baijidot" target="_blank" rel="noopener">GitHub</a>
+    <span style="margin:0 8px;color:var(--border)">·</span>
+    <a href="https://space.bilibili.com/292001394" target="_blank" rel="noopener">哔哩哔哩</a>
+  </p>
+</footer>
+
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ============================================
+   i18n
+   ============================================ */
+const I18N = {
+  zh: {
+    logo_sub: '/ 游戏企划工坊',
+    api_not_configured: '未配置',
+    settings: '设置',
+    empty_title: '开始使用前，请先配置 API',
+    empty_desc: 'GameForge 需要接入大语言模型来生成专业的游戏设计文档。支持 OpenAI、Claude 及兼容接口。',
+    config_api: '配置 API',
+    new_project: '新建企划',
+    template_library: '模板库',
+    game_idea: '游戏创意',
+    idea_placeholder: '描述你的游戏创意。越详细越好——可以包含玩法、故事、美术风格、目标受众等任何想法。',
+    idea_required: '请输入游戏创意',
+    game_genre: '游戏类型',
+    target_players: '目标玩家',
+    dev_cycle: '开发周期',
+    custom_prompt: '自定义 Prompt',
+    prompt_placeholder: '在此编辑系统提示词...',
+    prompt_hint: '选择预设模板或直接编辑提示词。留空则使用默认提示词。',
+    generate: '生成企划',
+    generating: '生成中...',
+    clear: '清空',
+    history: '历史记录',
+    clear_all: '清空',
+    gdd_title: '游戏设计文档',
+    completed: '已完成',
+    edit: '编辑',
+    save: '保存',
+    copy_all: '复制全部',
+    copy_solo: '复制 SOLO Prompt',
+    export_pdf: '导出 PDF',
+    export_word: '导出 Word',
+    download_md: '下载 .md',
+    back: '← 返回',
+    toc_title: '目录',
+    polish_placeholder: '输入润色要求，如：更详细的技术方案、增加竞品分析...',
+    ai_polish: 'AI 润色',
+    polishing: '润色中...',
+    api_config: 'API 配置',
+    api_url: 'API 地址',
+    api_url_hint: '填写完整的 API Base URL，包含 /v1 路径',
+    model: '模型',
+    model_hint: '填写模型 ID，如 gpt-4o、deepseek-chat、qwen-turbo 等',
+    show: '显示',
+    test_conn: '测试连接',
+    save_config: '保存配置',
+    cancel: '取消',
+    template_lib_title: '企划模板库',
+    template_lib_desc: '选择一个模板快速开始，模板会自动填充游戏创意和系统提示词。',
+    config_saved: '配置已保存',
+    test_success: '连接成功 ✓',
+    test_fail: '连接失败',
+    gen_complete: '生成完成',
+    gen_fail: '生成失败',
+    gen_cancel: '已取消生成',
+    copied: '已复制到剪贴板',
+    solo_copied: 'SOLO Prompt 已复制',
+    doc_downloaded: '文档已下载',
+    history_cleared: '历史已清空',
+    prompt_applied: '模板已应用',
+    no_api_url: '未配置 API 地址，请在设置中填写',
+    no_api_key: '请输入 API Key',
+    enter_api_url: '请输入 API 地址',
+    // New feature keys
+    import_doc: '导入文档',
+    import_title: '导入已有文档',
+    import_desc: '粘贴或上传已有的游戏设计文档，在此基础上进行修改和续写。',
+    import_paste_placeholder: '在此粘贴文档内容...',
+    import_upload_label: '或上传文件（.md / .txt）',
+    import_btn: '导入',
+    import_success: '文档已导入',
+    followup_placeholder: '输入追问，如：把竞品分析展开到10款、增加音效设计章节...',
+    followup_btn: '追问',
+    followup_hint: '基于当前文档继续追问，AI 会输出修改后的完整文档',
+    followup_ing: '追问中...',
+    section_regen_ing: '重写中...',
+    // genres
+    genres: {
+      adventure:'冒险',puzzle:'解谜',survival:'生存',strategy:'策略',casual:'休闲',
+      rpg:'角色扮演',action:'动作',simulation:'模拟',horror:'恐怖',sandbox:'沙盒',
+      racing:'竞速',sports:'体育',companion:'陪伴/养成',social:'社交',music:'音乐节奏',
+      visualnovel:'视觉小说',idle:'放置/挂机',education:'教育',other:'其他'
+    },
+    // players
+    players: {core:'核心玩家',casual:'休闲玩家',student:'学生群体',all:'全年龄',hardcore:'硬核玩家',children:'儿童'},
+    // cycles
+    cycles: {'1month':'1 个月','3months':'3 个月','6months':'6 个月','1year':'1 年','2years':'2 年'},
+    // prompt presets
+    preset_default: '默认',
+    preset_detailed: '详细版',
+    preset_investor: '投资人版',
+    preset_tech: '技术侧重',
+    preset_narrative: '叙事侧重',
+    // toast
+    toast_copied: '已复制到剪贴板',
+    toast_solo: 'SOLO Prompt 已复制',
+    toast_downloaded: '文档已下载',
+    toast_history_cleared: '历史已清空',
+    toast_template_applied: '模板已应用',
+    toast_config_saved: '配置已保存',
+    toast_gen_complete: '生成完成',
+    toast_gen_cancel: '已取消生成',
+    toast_import_success: '文档已导入',
+  },
+  en: {
+    logo_sub: '/ Game Design Workshop',
+    api_not_configured: 'Not configured',
+    settings: 'Settings',
+    empty_title: 'Configure API to get started',
+    empty_desc: 'GameForge needs an LLM API to generate professional game design documents. Supports OpenAI, Claude, and compatible APIs.',
+    config_api: 'Configure API',
+    new_project: 'New Project',
+    template_library: 'Templates',
+    game_idea: 'Game Idea',
+    idea_placeholder: 'Describe your game idea. The more detail the better — gameplay, story, art style, target audience, etc.',
+    idea_required: 'Please enter a game idea',
+    game_genre: 'Game Genre',
+    target_players: 'Target Players',
+    dev_cycle: 'Dev Cycle',
+    custom_prompt: 'Custom Prompt',
+    prompt_placeholder: 'Edit system prompt here...',
+    prompt_hint: 'Select a preset or edit the prompt directly. Leave empty to use the default prompt.',
+    generate: 'Generate',
+    generating: 'Generating...',
+    clear: 'Clear',
+    history: 'History',
+    clear_all: 'Clear All',
+    gdd_title: 'Game Design Document',
+    completed: 'Completed',
+    edit: 'Edit',
+    save: 'Save',
+    copy_all: 'Copy All',
+    copy_solo: 'Copy SOLO Prompt',
+    export_pdf: 'Export PDF',
+    export_word: 'Export Word',
+    download_md: 'Download .md',
+    back: '← Back',
+    toc_title: 'Table of Contents',
+    polish_placeholder: 'Enter revision instructions, e.g.: more detailed tech plan, add competitor analysis...',
+    ai_polish: 'AI Polish',
+    polishing: 'Polishing...',
+    api_config: 'API Configuration',
+    api_url: 'API URL',
+    api_url_hint: 'Enter the full API Base URL, including /v1 path',
+    model: 'Model',
+    model_hint: 'Enter model ID, e.g. gpt-4o, deepseek-chat, qwen-turbo',
+    show: 'Show',
+    test_conn: 'Test Connection',
+    save_config: 'Save Config',
+    cancel: 'Cancel',
+    template_lib_title: 'Template Library',
+    template_lib_desc: 'Select a template to get started quickly. Templates auto-fill the game idea and system prompt.',
+    config_saved: 'Config saved',
+    test_success: 'Connection successful ✓',
+    test_fail: 'Connection failed',
+    gen_complete: 'Generation complete',
+    gen_fail: 'Generation failed',
+    gen_cancel: 'Generation cancelled',
+    copied: 'Copied to clipboard',
+    solo_copied: 'SOLO Prompt copied',
+    doc_downloaded: 'Document downloaded',
+    history_cleared: 'History cleared',
+    prompt_applied: 'Template applied',
+    no_api_url: 'API URL not configured',
+    no_api_key: 'Please enter API Key',
+    enter_api_url: 'Please enter API URL',
+    // New feature keys
+    import_doc: 'Import',
+    import_title: 'Import Existing Document',
+    import_desc: 'Paste or upload an existing game design document to modify and continue writing.',
+    import_paste_placeholder: 'Paste document content here...',
+    import_upload_label: 'Or upload a file (.md / .txt)',
+    import_btn: 'Import',
+    import_success: 'Document imported',
+    followup_placeholder: 'Follow up, e.g.: expand competitor analysis to 10 games, add sound design section...',
+    followup_btn: 'Follow Up',
+    followup_hint: 'Ask follow-up questions about the current document. AI will output the full revised document.',
+    followup_ing: 'Following up...',
+    section_regen_ing: 'Rewriting...',
+    genres: {
+      adventure:'Adventure',puzzle:'Puzzle',survival:'Survival',strategy:'Strategy',casual:'Casual',
+      rpg:'RPG',action:'Action',simulation:'Simulation',horror:'Horror',sandbox:'Sandbox',
+      racing:'Racing',sports:'Sports',companion:'Companion/Nurturing',social:'Social',music:'Rhythm',
+      visualnovel:'Visual Novel',idle:'Idle/Incremental',education:'Education',other:'Other'
+    },
+    players: {core:'Core Gamers',casual:'Casual Gamers',student:'Students',all:'All Ages',hardcore:'Hardcore Gamers',children:'Children'},
+    cycles: {'1month':'1 Month','3months':'3 Months','6months':'6 Months','1year':'1 Year','2years':'2 Years'},
+    preset_default: 'Default',
+    preset_detailed: 'Detailed',
+    preset_investor: 'Investor',
+    preset_tech: 'Tech Focus',
+    preset_narrative: 'Narrative Focus',
+    toast_copied: 'Copied to clipboard',
+    toast_solo: 'SOLO Prompt copied',
+    toast_downloaded: 'Document downloaded',
+    toast_history_cleared: 'History cleared',
+    toast_template_applied: 'Template applied',
+    toast_config_saved: 'Config saved',
+    toast_gen_complete: 'Generation complete',
+    toast_gen_cancel: 'Generation cancelled',
+    toast_import_success: 'Document imported',
+  }
+};
+
+let currentLang = 'zh';
+
+function t(key) {
+  return (I18N[currentLang] && I18N[currentLang][key]) || key;
+}
+
+function toggleLang() {
+  currentLang = currentLang === 'zh' ? 'en' : 'zh';
+  document.getElementById('langLabel').textContent = currentLang === 'zh' ? 'EN' : '中';
+  document.documentElement.lang = currentLang === 'zh' ? 'zh-CN' : 'en';
+  try { localStorage.setItem('gameforge_lang', currentLang); } catch(e) {}
+  applyI18n();
+  populateSelects();
+}
+
+function applyI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (I18N[currentLang][key]) el.textContent = I18N[currentLang][key];
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (I18N[currentLang][key]) el.placeholder = I18N[currentLang][key];
+  });
+}
+
+/* ============================================
+   State
+   ============================================ */
+let config = { provider: 'openai', openai: { baseUrl: '', apiKey: '', model: '' }, claude: { apiKey: '', model: '' } };
+let currentDocument = '';
+let isGenerating = false;
+let isEditMode = false;
+let abortController = null;
+let activePromptPreset = 'default';
+let sectionBoundaries = [];
+
+/* ============================================
+   Theme
+   ============================================ */
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('themeToggle').classList.toggle('dark', !isDark);
+  try { localStorage.setItem('gameforge_theme', isDark ? 'light' : 'dark'); } catch(e) {}
+}
+
+function loadTheme() {
+  try {
+    const saved = localStorage.getItem('gameforge_theme');
+    if (saved === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.getElementById('themeToggle').classList.add('dark');
+    }
+  } catch(e) {}
+}
+
+/* ============================================
+   Init
+   ============================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  loadTheme();
+  try { const l = localStorage.getItem('gameforge_lang'); if (l) { currentLang = l; document.getElementById('langLabel').textContent = l === 'zh' ? 'EN' : '中'; document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en'; } } catch(e) {}
+  loadConfig();
+  loadHistory();
+  populateSelects();
+  applyI18n();
+  updateUI();
+  initPromptPresets();
+  loadCustomPrompt();
+});
+
+function populateSelects() {
+  const genres = I18N[currentLang].genres;
+  const genreEl = document.getElementById('gameGenre');
+  genreEl.innerHTML = Object.entries(genres).map(([k,v]) => `<option value="${k}">${v}</option>`).join('');
+
+  const players = I18N[currentLang].players;
+  const playersEl = document.getElementById('targetPlayers');
+  playersEl.innerHTML = Object.entries(players).map(([k,v]) => `<option value="${k}">${v}</option>`).join('');
+
+  const cycles = I18N[currentLang].cycles;
+  const cycleEl = document.getElementById('devCycle');
+  cycleEl.innerHTML = Object.entries(cycles).map(([k,v]) => `<option value="${k}">${v}</option>`).join('');
+}
+
+function updateUI() {
+  const hasConfig = (config.provider === 'openai' && config.openai.apiKey) || (config.provider === 'claude' && config.claude.apiKey);
+  document.getElementById('emptyState').style.display = hasConfig ? 'none' : 'block';
+  document.getElementById('inputSection').style.display = hasConfig ? 'block' : 'none';
+  const status = document.getElementById('apiStatus');
+  if (hasConfig) {
+    status.className = 'api-status connected';
+    status.innerHTML = '<span class="dot"></span>' + (config.provider === 'openai' ? 'OpenAI' : 'Claude');
+  } else {
+    status.className = 'api-status disconnected';
+    status.innerHTML = '<span class="dot"></span>' + t('api_not_configured');
+  }
+}
+
+/* ============================================
+   Config Modal
+   ============================================ */
+function openConfigModal() {
+  document.getElementById('configModal').classList.add('show');
+  document.getElementById('openaiBaseUrl').value = config.openai.baseUrl || '';
+  document.getElementById('openaiApiKey').value = config.openai.apiKey || '';
+  document.getElementById('openaiModel').value = config.openai.model || '';
+  document.getElementById('claudeApiKey').value = config.claude.apiKey || '';
+  document.getElementById('claudeModel').value = config.claude.model || '';
+  switchProvider(config.provider);
+  document.getElementById('testResult').className = 'test-result';
+  document.getElementById('testResult').textContent = '';
+}
+
+function closeConfigModal() {
+  document.getElementById('configModal').classList.remove('show');
+}
+
+function switchProvider(p) {
+  config.provider = p;
+  document.querySelectorAll('.provider-tab').forEach(t => t.classList.toggle('active', t.dataset.provider === p));
+  document.querySelectorAll('.config-section').forEach(s => s.classList.remove('active'));
+  document.getElementById(p === 'openai' ? 'configOpenai' : 'configClaude').classList.add('active');
+}
+
+function toggleKeyVisibility(id) {
+  const input = document.getElementById(id);
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+function saveConfig() {
+  config.openai.baseUrl = document.getElementById('openaiBaseUrl').value.trim().replace(/\/+$/, '');
+  config.openai.apiKey = document.getElementById('openaiApiKey').value.trim();
+  config.openai.model = document.getElementById('openaiModel').value.trim();
+  config.claude.apiKey = document.getElementById('claudeApiKey').value.trim();
+  config.claude.model = document.getElementById('claudeModel').value.trim();
+  try { localStorage.setItem('gameforge_config', JSON.stringify(config)); } catch(e) {}
+  updateUI();
+  closeConfigModal();
+  showToast(t('toast_config_saved'), 'success');
+}
+
+function loadConfig() {
+  try {
+    const saved = localStorage.getItem('gameforge_config');
+    if (saved) { const parsed = JSON.parse(saved); Object.assign(config, parsed); }
+  } catch(e) {}
+}
+
+/* ============================================
+   Test Connection
+   ============================================ */
+async function testConnection() {
+  const result = document.getElementById('testResult');
+  result.className = 'test-result';
+  result.textContent = '...';
+  try {
+    if (config.provider === 'openai') {
+      const baseUrl = document.getElementById('openaiBaseUrl').value.trim().replace(/\/+$/, '');
+      const apiKey = document.getElementById('openaiApiKey').value.trim();
+      const model = document.getElementById('openaiModel').value.trim() || 'gpt-4o-mini';
+      if (!apiKey) { result.className = 'test-result error'; result.textContent = t('no_api_key'); return; }
+      if (!baseUrl) { result.className = 'test-result error'; result.textContent = t('enter_api_url'); return; }
+      const res = await fetch(baseUrl + '/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+        body: JSON.stringify({ model, messages: [{ role: 'user', content: 'Hi' }], max_tokens: 5 })
+      });
+      if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error?.message || 'HTTP ' + res.status); }
+      result.className = 'test-result success';
+      result.textContent = t('test_success') + '  Model: ' + model;
+    } else {
+      const apiKey = document.getElementById('claudeApiKey').value.trim();
+      const model = document.getElementById('claudeModel').value.trim() || 'claude-sonnet-4-20250514';
+      if (!apiKey) { result.className = 'test-result error'; result.textContent = t('no_api_key'); return; }
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+        body: JSON.stringify({ model, max_tokens: 10, messages: [{ role: 'user', content: 'Hi' }] })
+      });
+      if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error?.message || 'HTTP ' + res.status); }
+      result.className = 'test-result success';
+      result.textContent = t('test_success') + '  Model: ' + model;
+    }
+  } catch(e) {
+    result.className = 'test-result error';
+    const msg = e.message || '';
+    if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('Load failed')) {
+      result.textContent = (currentLang === 'zh'
+        ? '连接失败：网络错误。可能原因：\n1. API 地址不正确\n2. 该 API 不支持浏览器直接调用（CORS 限制）\n3. 网络连接问题'
+        : 'Connection failed. Possible causes:\n1. Incorrect API URL\n2. API does not support browser requests (CORS)\n3. Network issue');
+    } else {
+      result.textContent = t('test_fail') + ': ' + msg;
+    }
+  }
+}
+
+/* ============================================
+   Prompt Presets
+   ============================================ */
+const PROMPT_PRESETS = {
+  zh: {
+    default: `你是一位资深的游戏设计师和产品经理，擅长撰写专业的游戏设计文档（GDD）。
+
+请根据用户提供的游戏创意和参数，生成一份完整、专业的游戏设计文档。
+
+要求：
+1. 使用 Markdown 格式
+2. 文档结构清晰，包含以下章节：
+   - 游戏概述（简介、核心卖点、目标平台、设计愿景）
+   - 核心玩法（玩法概述、核心机制、操作方式、进度系统、难度设计）
+   - 故事框架（世界观、主角设定、主线剧情、关键 NPC）
+   - 关卡设计（章节规划表）
+   - 美术风格（整体风格、色彩方案、角色设计、场景设计、UI/UX）
+   - 技术方案（推荐技术栈、架构设计、性能目标）
+   - 开发路线图（阶段性规划表）
+   - 商业模式
+   - 竞品分析
+   - 成功指标
+3. 内容要专业、具体、可执行，不要泛泛而谈
+4. 表格使用 Markdown 表格格式
+5. 根据开发周期合理规划技术栈和路线图
+6. 生成一个合适的游戏名称作为文档标题`,
+
+    detailed: `你是一位资深的游戏设计师，请生成一份极其详细、可直接用于开发团队执行的游戏设计文档。
+
+要求：
+1. 使用 Markdown 格式，文档不少于 3000 字
+2. 必须包含以下完整章节，每个章节都要有实质性内容：
+   - 游戏概述（一句话介绍、核心卖点 3-5 条、目标平台、设计愿景、核心指标）
+   - 核心玩法（玩法概述、核心循环图描述、核心机制详解、操作方式、进度系统、难度曲线设计、新手引导流程）
+   - 游戏系统（角色系统、装备/道具系统、经济系统、社交系统、成就系统）
+   - 故事与世界观（世界观设定、地理/阵营划分、主角设定、主线剧情大纲 3-5 章、支线任务设计、关键 NPC 列表及简介）
+   - 关卡设计（章节规划表，包含关卡名、核心玩法、敌人类型、奖励、预计时长）
+   - 美术与音效（整体风格参考、色彩方案、角色设计要点、场景设计要点、UI/UX 设计原则、音效/BGM 风格）
+   - 技术方案（推荐引擎、技术栈、架构设计、网络方案、性能目标、平台适配）
+   - 开发路线图（里程碑表：阶段、时间、交付物、人员需求）
+   - 商业模式（收费方式、内购设计、广告策略、用户获取成本预估）
+   - 竞品分析（3-5 款竞品对比表：名称、相似度、优势、劣势、差异化策略）
+   - 风险评估（技术风险、市场风险、运营风险及应对方案）
+   - 成功指标（DAU/MAU、留存率、付费率、ARPU 等具体目标值）
+3. 所有表格使用 Markdown 表格格式
+4. 内容专业、具体、数据化，可直接用于团队执行
+5. 根据开发周期合理规划
+6. 生成一个合适的游戏名称作为文档标题`,
+
+    investor: `你是一位游戏行业的产品经理和商业分析师。请生成一份面向投资人的游戏企划文档。
+
+要求：
+1. 使用 Markdown 格式
+2. 重点突出商业价值和市场潜力，包含以下章节：
+   - 一句话介绍（电梯演讲）
+   - 市场机会（市场规模、增长趋势、目标用户画像）
+   - 产品概述（核心玩法、核心卖点、差异化优势）
+   - 竞品格局（主要竞品、市场空白、竞争壁垒）
+   - 商业模式（收入模型、LTV/CAC 预估、盈利路径）
+   - 发展路线图（里程碑、融资需求、资金用途）
+   - 团队需求（核心岗位、人员预算）
+   - 风险与应对
+   - 财务预测（保守/乐观场景）
+3. 用数据说话，引用行业报告数据
+4. 突出创新点和市场差异化
+5. 生成一个有吸引力的游戏名称作为标题`,
+
+    tech: `你是一位资深的游戏技术架构师和主程序。请生成一份技术侧重的游戏设计文档。
+
+要求：
+1. 使用 Markdown 格式
+2. 重点突出技术方案和架构设计，包含以下章节：
+   - 游戏概述（简介、核心玩法、目标平台）
+   - 技术选型（游戏引擎对比与选择、编程语言、框架、第三方 SDK）
+   - 系统架构（整体架构图描述、模块划分、数据流、通信协议）
+   - 核心系统设计（渲染管线、物理系统、AI 系统、网络同步方案）
+   - 数据设计（存档方案、数据表结构、热更新方案）
+   - 性能优化（目标帧率、内存预算、加载优化、LOD 策略）
+   - 开发工具链（版本控制、CI/CD、构建系统、调试工具）
+   - 开发路线图（技术里程碑表）
+   - 风险评估（技术难点、备选方案）
+3. 技术方案要具体、可执行，包含关键参数
+4. 表格使用 Markdown 表格格式
+5. 生成一个合适的游戏名称作为文档标题`,
+
+    narrative: `你是一位资深的游戏叙事设计师和编剧。请生成一份叙事侧重的游戏设计文档。
+
+要求：
+1. 使用 Markdown 格式
+2. 重点突出故事和世界观设计，包含以下章节：
+   - 游戏概述（简介、核心玩法、叙事定位）
+   - 世界观设定（时代背景、地理环境、势力阵营、魔法/科技体系）
+   - 主角设定（姓名、外貌、性格、背景故事、成长弧线）
+   - 关键 NPC（角色表：姓名、身份、性格、与主角关系、剧情作用）
+   - 主线剧情（分章剧情大纲，每章包含：场景、事件、冲突、转折、结局）
+   - 支线任务设计（3-5 条支线任务概述）
+   - 对话系统设计（对话风格、选择分支机制、好感度系统）
+   - 美术与氛围（场景概念、音乐风格、色彩情绪板描述）
+   - 叙事节奏（情绪曲线、高潮设计、结局分支）
+3. 故事要有深度、有情感共鸣
+4. 角色要立体，避免脸谱化
+5. 生成一个有故事感的游戏名称作为标题`
+  },
+  en: {
+    default: `You are a senior game designer and product manager, skilled at writing professional Game Design Documents (GDD).
+
+Generate a complete, professional GDD based on the user's game idea and parameters.
+
+Requirements:
+1. Use Markdown format
+2. Clear document structure with these sections:
+   - Game Overview (intro, core selling points, target platforms, design vision)
+   - Core Gameplay (overview, core mechanics, controls, progression, difficulty)
+   - Story Framework (worldbuilding, protagonist, main plot, key NPCs)
+   - Level Design (chapter planning table)
+   - Art Direction (overall style, color palette, character design, scene design, UI/UX)
+   - Technical Plan (recommended tech stack, architecture, performance targets)
+   - Development Roadmap (milestone table)
+   - Business Model
+   - Competitor Analysis
+   - Success Metrics
+3. Content must be professional, specific, and actionable
+4. Use Markdown tables
+5. Plan tech stack and roadmap based on dev cycle
+6. Generate an appropriate game title as the document heading`,
+
+    detailed: `You are a senior game designer. Generate an extremely detailed GDD ready for direct use by a development team.
+
+Requirements:
+1. Use Markdown format, document should be 3000+ words
+2. Must include all these sections with substantial content:
+   - Game Overview (one-liner, 3-5 selling points, target platforms, vision, core metrics)
+   - Core Gameplay (overview, core loop, mechanics detail, controls, progression, difficulty curve, onboarding)
+   - Game Systems (character, equipment/items, economy, social, achievements)
+   - Story & World (worldbuilding, geography/factions, protagonist, main plot outline 3-5 chapters, side quests, key NPC list)
+   - Level Design (chapter table: name, gameplay, enemies, rewards, duration)
+   - Art & Audio (style references, color palette, character art, scene art, UI/UX principles, audio/BGM style)
+   - Technical Plan (engine choice, tech stack, architecture, networking, performance, platform adaptation)
+   - Development Roadmap (milestone table: phase, timeline, deliverables, team needs)
+   - Business Model (monetization, IAP design, ad strategy, CAC estimates)
+   - Competitor Analysis (3-5 competitors table: name, similarity, strengths, weaknesses, differentiation)
+   - Risk Assessment (technical, market, operational risks and mitigations)
+   - Success Metrics (DAU/MAU, retention, conversion, ARPU targets)
+3. All tables in Markdown format
+4. Professional, specific, data-driven content
+5. Generate an appropriate game title`,
+
+    investor: `You are a game industry product manager and business analyst. Generate a game pitch document for investors.
+
+Requirements:
+1. Use Markdown format
+2. Focus on business value and market potential:
+   - Elevator Pitch
+   - Market Opportunity (market size, growth trends, target user personas)
+   - Product Overview (core gameplay, selling points, differentiation)
+   - Competitive Landscape (key competitors, market gaps, barriers to entry)
+   - Business Model (revenue model, LTV/CAC estimates, path to profitability)
+   - Roadmap (milestones, funding needs, use of funds)
+   - Team Requirements (key roles, budget)
+   - Risks & Mitigations
+   - Financial Projections (conservative/optimistic scenarios)
+3. Data-driven, reference industry reports
+4. Highlight innovation and differentiation
+5. Generate an attractive game title`,
+
+    tech: `You are a senior game technical architect and lead programmer. Generate a tech-focused GDD.
+
+Requirements:
+1. Use Markdown format
+2. Focus on technical solutions and architecture:
+   - Game Overview (intro, core gameplay, target platforms)
+   - Tech Selection (engine comparison, languages, frameworks, SDKs)
+   - System Architecture (overall architecture, module design, data flow, protocols)
+   - Core Systems (rendering pipeline, physics, AI, networking/sync)
+   - Data Design (save system, data tables, hot update)
+   - Performance Optimization (target FPS, memory budget, loading, LOD)
+   - Toolchain (version control, CI/CD, build system, debug tools)
+   - Development Roadmap (tech milestones table)
+   - Risk Assessment (technical challenges, alternatives)
+3. Specific, actionable technical plans with key parameters
+4. Use Markdown tables
+5. Generate an appropriate game title`,
+
+    narrative: `You are a senior game narrative designer and writer. Generate a narrative-focused GDD.
+
+Requirements:
+1. Use Markdown format
+2. Focus on story and worldbuilding:
+   - Game Overview (intro, core gameplay, narrative positioning)
+   - Worldbuilding (era, geography, factions, magic/tech systems)
+   - Protagonist (name, appearance, personality, backstory, character arc)
+   - Key NPCs (character table: name, role, personality, relationship, plot function)
+   - Main Plot (chapter-by-chapter outline: scene, events, conflict, twist, resolution)
+   - Side Quests (3-5 side quest summaries)
+   - Dialogue System (dialogue style, branching, affinity system)
+   - Art & Atmosphere (scene concepts, music style, color/mood descriptions)
+   - Narrative Pacing (emotional curve, climax design, ending branches)
+3. Deep, emotionally resonant storytelling
+4. Three-dimensional characters, avoid stereotypes
+5. Generate an evocative game title`
+  }
+};
+
+function initPromptPresets() {
+  const container = document.getElementById('promptPresets');
+  const presetKeys = ['default','detailed','investor','tech','narrative'];
+  container.innerHTML = presetKeys.map(key =>
+    `<button class="prompt-preset-btn${key === activePromptPreset ? ' active' : ''}" data-preset="${key}" onclick="selectPromptPreset('${key}')">${t('preset_' + key)}</button>`
+  ).join('');
+}
+
+function selectPromptPreset(key) {
+  activePromptPreset = key;
+  const editor = document.getElementById('customPromptEditor');
+  editor.value = PROMPT_PRESETS[currentLang][key] || '';
+  try { localStorage.setItem('gameforge_prompt_preset', key); } catch(e) {}
+  try { localStorage.setItem('gameforge_custom_prompt', editor.value); } catch(e) {}
+  document.querySelectorAll('.prompt-preset-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === key));
+}
+
+function loadCustomPrompt() {
+  try {
+    const preset = localStorage.getItem('gameforge_prompt_preset');
+    if (preset && PROMPT_PRESETS['zh'][preset]) {
+      activePromptPreset = preset;
+    }
+    const saved = localStorage.getItem('gameforge_custom_prompt');
+    if (saved) {
+      document.getElementById('customPromptEditor').value = saved;
+    } else {
+      document.getElementById('customPromptEditor').value = PROMPT_PRESETS[currentLang][activePromptPreset] || '';
+    }
+  } catch(e) {}
+}
+
+/* ============================================
+   Collapsible
+   ============================================ */
+function toggleCollapsible(id) {
+  const body = document.getElementById(id);
+  const arrow = document.getElementById(id + '_arrow');
+  body.classList.toggle('open');
+  if (arrow) arrow.classList.toggle('open');
+}
+
+/* ============================================
+   Template Library
+   ============================================ */
+const TEMPLATES = [
+  {
+    id: 'action_rpg',
+    icon: '⚔️',
+    name_zh: '动作 RPG',
+    name_en: 'Action RPG',
+    desc_zh: '融合即时战斗与角色成长，包含装备系统、技能树、副本挑战',
+    desc_en: 'Real-time combat with character progression, equipment, skill trees, dungeons',
+    idea_zh: '一款东方玄幻风格的动作 RPG，玩家扮演一名失忆的剑客，在广袤的仙侠世界中寻找身世之谜。游戏采用即时战斗系统，融合弹幕闪避和连招系统，拥有丰富的装备锻造和技能搭配。',
+    idea_en: 'An Eastern fantasy action RPG where the player is an amnesiac swordsman exploring a vast xianxia world. Features real-time combat with bullet-hell dodging and combo systems, rich equipment crafting and skill builds.',
+    genre: 'rpg',
+    prompt_preset: 'detailed'
+  },
+  {
+    id: 'survival_craft',
+    icon: '🏕️',
+    name_zh: '生存建造',
+    name_en: 'Survival Craft',
+    desc_zh: '资源采集、基地建造、环境生存，支持多人合作',
+    desc_en: 'Resource gathering, base building, environmental survival, multiplayer co-op',
+    idea_zh: '一款末日生存建造游戏，玩家需要在被丧尸病毒席卷的城市中搜集物资、建造避难所、制作武器。游戏采用程序化生成的城市地图，有昼夜循环和天气系统，支持 4 人在线合作。',
+    idea_en: 'A post-apocalyptic survival crafting game. Players scavenge materials in a zombie-infested city, build shelters, and craft weapons. Procedurally generated city map with day/night cycle and weather system. Supports 4-player online co-op.',
+    genre: 'survival',
+    prompt_preset: 'detailed'
+  },
+  {
+    id: 'puzzle_story',
+    icon: '🧩',
+    name_zh: '叙事解谜',
+    name_en: 'Narrative Puzzle',
+    desc_zh: '以故事驱动的解谜游戏，谜题与剧情深度融合',
+    desc_en: 'Story-driven puzzle game with deep integration of puzzles and narrative',
+    idea_zh: '一款手绘风格的叙事解谜游戏，讲述一个小女孩在梦境世界中寻找失踪哥哥的故事。每个关卡代表一段记忆，玩家需要通过操控时间、空间和光影来解开谜题，逐步揭开真相。',
+    idea_en: 'A hand-drawn narrative puzzle game about a girl searching for her missing brother in a dream world. Each level represents a memory. Players manipulate time, space, and light to solve puzzles and uncover the truth.',
+    genre: 'puzzle',
+    prompt_preset: 'narrative'
+  },
+  {
+    id: 'casual_merge',
+    icon: '🌸',
+    name_zh: '休闲合成',
+    name_en: 'Casual Merge',
+    desc_zh: '轻松治愈的合成类游戏，适合碎片化时间',
+    desc_en: 'Relaxing merge game, perfect for casual play sessions',
+    idea_zh: '一款治愈系合成经营游戏，玩家继承了一座废弃的花园，通过合成植物、装饰和建筑来恢复花园的生机。游戏节奏轻松，美术风格清新可爱，包含丰富的收集元素和温馨的小故事。',
+    idea_en: 'A relaxing merge management game where players inherit an abandoned garden and restore it by merging plants, decorations, and buildings. Casual pace, cute art style, rich collectibles, and heartwarming mini-stories.',
+    genre: 'casual',
+    prompt_preset: 'default'
+  },
+  {
+    id: 'strategy_tower',
+    icon: '🏰',
+    name_zh: '塔防策略',
+    name_en: 'Tower Defense',
+    desc_zh: '策略塔防游戏，包含英雄系统、多种防御塔和技能搭配',
+    desc_en: 'Strategic tower defense with hero system, diverse towers, and skill combos',
+    idea_zh: '一款二次元风格的策略塔防游戏，玩家可以收集和培养不同属性的英雄，搭配多种防御塔来抵御敌人入侵。每个英雄有独特的主动技能，塔防布局有丰富的策略深度。包含剧情模式和竞技场模式。',
+    idea_en: 'An anime-style strategic tower defense game. Collect and train heroes of different elements, combine with various defense towers to repel invaders. Each hero has unique active skills. Rich strategic depth in tower placement. Story mode and arena mode.',
+    genre: 'strategy',
+    prompt_preset: 'detailed'
+  },
+  {
+    id: 'companion_pet',
+    icon: '🐾',
+    name_zh: '陪伴养成',
+    name_en: 'Companion/Nurturing',
+    desc_zh: '温馨的宠物/角色养成游戏，注重情感陪伴',
+    desc_en: 'Heartwarming pet/character nurturing game focused on companionship',
+    idea_zh: '一款电子宠物陪伴游戏，玩家领养一只可爱的精灵伙伴，需要每天喂食、玩耍、训练。精灵会根据互动方式成长出不同的性格和能力。游戏强调情感连接，精灵会记住玩家的习惯，在不同时段有不同的互动反应。',
+    idea_en: 'A digital pet companion game. Players adopt a cute spirit companion that needs daily feeding, playing, and training. The spirit grows different personalities and abilities based on interaction style. Emphasizes emotional connection — the spirit remembers player habits and reacts differently at various times.',
+    genre: 'companion',
+    prompt_preset: 'narrative'
+  },
+  {
+    id: 'horror_explore',
+    icon: '👻',
+    name_zh: '恐怖探索',
+    name_en: 'Horror Exploration',
+    desc_zh: '氛围驱动的恐怖探索游戏，注重心理恐惧和沉浸感',
+    desc_en: 'Atmosphere-driven horror exploration, psychological horror and immersion',
+    idea_zh: '一款第一人称恐怖探索游戏，玩家在一座废弃的精神病院中醒来，需要通过搜集线索和解谜来逃离。游戏没有战斗系统，依靠环境叙事、音效设计和 jump scare 营造恐惧氛围。有多结局设计。',
+    idea_en: 'A first-person horror exploration game. Players wake up in an abandoned asylum and must collect clues and solve puzzles to escape. No combat system — relies on environmental storytelling, sound design, and jump scares. Multiple endings.',
+    genre: 'horror',
+    prompt_preset: 'narrative'
+  },
+  {
+    id: 'music_rhythm',
+    icon: '🎵',
+    name_zh: '音乐节奏',
+    name_en: 'Rhythm Game',
+    desc_zh: '音乐节奏游戏，包含原创曲目和谱面编辑器',
+    desc_en: 'Music rhythm game with original tracks and chart editor',
+    idea_zh: '一款赛博朋克风格的音乐节奏游戏，玩家在霓虹闪烁的未来城市中跟随音乐节拍进行操作。游戏包含多种判定模式（tap、hold、slide、flick），有丰富的原创电子音乐曲目和社区谱面分享功能。',
+    idea_en: 'A cyberpunk rhythm game where players perform actions to the beat in a neon-lit futuristic city. Multiple note types (tap, hold, slide, flick), rich original electronic music tracks, and community chart sharing.',
+    genre: 'music',
+    prompt_preset: 'default'
+  }
+];
+
+function openTemplateModal() {
+  document.getElementById('templateModal').classList.add('show');
+  renderTemplates();
+}
+
+function closeTemplateModal() {
+  document.getElementById('templateModal').classList.remove('show');
+}
+
+function renderTemplates() {
+  const grid = document.getElementById('templateGrid');
+  grid.innerHTML = TEMPLATES.map(t => `
+    <div class="template-card" onclick="applyTemplate('${t.id}')">
+      <div class="template-card-title">${t.icon} ${currentLang === 'zh' ? t.name_zh : t.name_en}</div>
+      <div class="template-card-desc">${currentLang === 'zh' ? t.desc_zh : t.desc_en}</div>
+    </div>
+  `).join('');
+}
+
+function applyTemplate(id) {
+  const tpl = TEMPLATES.find(t => t.id === id);
+  if (!tpl) return;
+  document.getElementById('gameIdea').value = currentLang === 'zh' ? tpl.idea_zh : tpl.idea_en;
+  document.getElementById('gameGenre').value = tpl.genre;
+  selectPromptPreset(tpl.prompt_preset);
+  closeTemplateModal();
+  showToast(t('toast_template_applied'), 'success');
+}
+
+/* ============================================
+   Import Document
+   ============================================ */
+function openImportModal() {
+  document.getElementById('importModal').classList.add('show');
+  document.getElementById('importTextarea').value = '';
+  document.getElementById('importFileInput').value = '';
+}
+
+function closeImportModal() {
+  document.getElementById('importModal').classList.remove('show');
+}
+
+function handleImportFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('importTextarea').value = e.target.result;
+  };
+  reader.readAsText(file);
+}
+
+function importDocument() {
+  const content = document.getElementById('importTextarea').value.trim();
+  if (!content) {
+    showToast(currentLang === 'zh' ? '请粘贴或上传文档内容' : 'Please paste or upload document content', 'error');
+    return;
+  }
+  currentDocument = content;
+  document.getElementById('gameIdea').value = content;
+  renderMarkdown(content);
+  extractTOC();
+  document.getElementById('resultSection').classList.add('show');
+  document.getElementById('streamingBadge').style.display = 'none';
+  document.getElementById('resultBadge').style.display = 'inline-flex';
+  document.getElementById('followupSection').style.display = 'block';
+  exitEditMode();
+  closeImportModal();
+  document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  showToast(t('toast_import_success'), 'success');
+}
+
+/* ============================================
+   Generate Document
+   ============================================ */
+async function generateDocument() {
+  if (isGenerating) return;
+  const idea = document.getElementById('gameIdea').value.trim();
+  if (!idea) { document.getElementById('ideaError').classList.add('show'); return; }
+  document.getElementById('ideaError').classList.remove('show');
+
+  const genre = document.getElementById('gameGenre');
+  const players = document.getElementById('targetPlayers');
+  const cycle = document.getElementById('devCycle');
+  const genreText = genre.selectedOptions[0].text;
+  const playersText = players.selectedOptions[0].text;
+  const cycleText = cycle.selectedOptions[0].text;
+
+  isGenerating = true;
+  abortController = new AbortController();
+  const btn = document.getElementById('generateBtn');
+  btn.disabled = true;
+  btn.textContent = t('generating');
+
+  document.getElementById('resultSection').classList.add('show');
+  document.getElementById('docContent').innerHTML = '';
+  document.getElementById('resultBadge').style.display = 'none';
+  document.getElementById('streamingBadge').style.display = 'inline-flex';
+  document.getElementById('tocList').innerHTML = '';
+  document.getElementById('followupSection').style.display = 'none';
+  exitEditMode();
+  document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  const customPrompt = document.getElementById('customPromptEditor').value.trim();
+  const systemPrompt = customPrompt || buildDefaultSystemPrompt(genreText, playersText, cycleText);
+  const userPrompt = buildUserPrompt(idea, genreText, playersText, cycleText);
+
+  try {
+    let fullText = '';
+    if (config.provider === 'openai') {
+      fullText = await streamOpenAI(systemPrompt, userPrompt);
+    } else {
+      fullText = await streamClaude(systemPrompt, userPrompt);
+    }
+    currentDocument = fullText;
+    renderMarkdown(fullText);
+    extractTOC();
+    document.getElementById('streamingBadge').style.display = 'none';
+    document.getElementById('resultBadge').style.display = 'inline-flex';
+    document.getElementById('followupSection').style.display = 'block';
+    saveToHistory(idea, genreText, playersText, cycleText, fullText);
+    showToast(t('toast_gen_complete'), 'success');
+  } catch(e) {
+    if (e.name === 'AbortError') {
+      showToast(t('toast_gen_cancel'), 'info');
+    } else {
+      showToast(t('gen_fail') + ': ' + e.message, 'error');
+      document.getElementById('docContent').innerHTML = '<p style="color:var(--red)">' + escapeHtml(e.message) + '</p>';
+    }
+    document.getElementById('streamingBadge').style.display = 'none';
+  } finally {
+    isGenerating = false;
+    btn.disabled = false;
+    btn.textContent = t('generate');
+    abortController = null;
+  }
+}
+
+/* ============================================
+   Prompt Building
+   ============================================ */
+function buildDefaultSystemPrompt(genre, players, cycle) {
+  return PROMPT_PRESETS[currentLang].default + `\n\n游戏类型：${genre}，目标玩家：${players}，开发周期：${cycle}`;
+}
+
+function buildUserPrompt(idea, genre, players, cycle) {
+  if (currentLang === 'zh') {
+    return `我的游戏创意如下：\n\n${idea}\n\n游戏类型：${genre}\n目标玩家：${players}\n开发周期：${cycle}\n\n请基于以上信息，生成一份完整的游戏设计文档。`;
+  } else {
+    return `My game idea:\n\n${idea}\n\nGame Genre: ${genre}\nTarget Players: ${players}\nDev Cycle: ${cycle}\n\nPlease generate a complete game design document based on the above information.`;
+  }
+}
+
+/* ============================================
+   API Calls (Streaming)
+   ============================================ */
+async function streamOpenAI(systemPrompt, userPrompt) {
+  const baseUrl = (config.openai.baseUrl || '').replace(/\/+$/, '');
+  if (!baseUrl) throw new Error(t('no_api_url'));
+  const res = await fetch(baseUrl + '/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + config.openai.apiKey },
+    body: JSON.stringify({
+      model: config.openai.model || 'gpt-4o-mini',
+      messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
+      stream: true,
+      temperature: 0.7
+    }),
+    signal: abortController.signal
+  });
+  if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error?.message || 'HTTP ' + res.status); }
+  return await readSSEStream(res, 'openai');
+}
+
+async function streamClaude(systemPrompt, userPrompt) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': config.claude.apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+    body: JSON.stringify({
+      model: config.claude.model || 'claude-sonnet-4-20250514',
+      max_tokens: 8192,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userPrompt }],
+      stream: true
+    }),
+    signal: abortController.signal
+  });
+  if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error?.message || 'HTTP ' + res.status); }
+  return await readSSEStream(res, 'claude');
+}
+
+async function readSSEStream(res, provider) {
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let fullText = '';
+  let buffer = '';
+  const docEl = document.getElementById('docContent');
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || !trimmed.startsWith('data:')) continue;
+      const data = trimmed.slice(5).trim();
+      if (data === '[DONE]') continue;
+      try {
+        const json = JSON.parse(data);
+        let delta = '';
+        if (provider === 'openai') {
+          delta = json.choices?.[0]?.delta?.content || '';
+        } else {
+          delta = json.delta?.text || '';
+        }
+        if (delta) {
+          fullText += delta;
+          renderMarkdown(fullText);
+          docEl.classList.add('streaming-cursor');
+          docEl.scrollTop = docEl.scrollHeight;
+        }
+      } catch(e) {}
+    }
+  }
+  docEl.classList.remove('streaming-cursor');
+  return fullText;
+}
+
+/* ============================================
+   Markdown Renderer (lightweight)
+   ============================================ */
+function renderMarkdown(md) {
+  let html = escapeHtml(md);
+  html = html.replace(/^(\|.+\|)\n(\|[-| :]+\|)\n((?:\|.+\|\n?)+)/gm, (match, header, sep, body) => {
+    const headers = header.split('|').filter(c => c.trim()).map(c => '<th>' + c.trim() + '</th>').join('');
+    const rows = body.trim().split('\n').map(row => {
+      const cells = row.split('|').filter(c => c.trim()).map(c => '<td>' + c.trim() + '</td>').join('');
+      return '<tr>' + cells + '</tr>';
+    }).join('');
+    return '<table><thead><tr>' + headers + '</tr></thead><tbody>' + rows + '</tbody></table>';
+  });
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  html = html.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
+  html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
+  html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
+  html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+  html = html.replace(/<\/blockquote>\n?<blockquote>/g, '');
+  html = html.replace(/\n\n(?!<)/g, '</p><p>');
+  html = '<p>' + html + '</p>';
+  html = html.replace(/<p>\s*<(h[1-3]|ul|ol|table|blockquote|div)/g, '<$1');
+  html = html.replace(/<\/(h[1-3]|ul|ol|table|blockquote|div)>\s*<\/p>/g, '</$1>');
+  html = html.replace(/<p>\s*<\/p>/g, '');
+  html = html.replace(/<p>\s*<li>/g, '<li>');
+  html = html.replace(/<\/li>\s*<\/p>/g, '</li>');
+
+  // Add section regenerate buttons to h2 elements (only when not streaming and not in edit mode)
+  if (!isGenerating && !isEditMode && currentDocument) {
+    html = html.replace(/<h2>(.+?)<\/h2>/g, (match, headingText) => {
+      return '<h2>' + headingText + '<button class="section-regen-btn" onclick="regenerateSection(this)" title="Regenerate">&#x1f504;</button></h2>';
+    });
+  }
+
+  document.getElementById('docContent').innerHTML = html;
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ============================================
+   Section Boundaries & Regeneration
+   ============================================ */
+function computeSectionBoundaries() {
+  sectionBoundaries = [];
+  if (!currentDocument) return;
+  const lines = currentDocument.split('\n');
+  let currentHeading = null;
+  let startIndex = 0;
+  for (let i = 0; i < lines.length; i++) {
+    if (/^## /.test(lines[i])) {
+      if (currentHeading !== null) {
+        sectionBoundaries.push({ heading: currentHeading, startIndex: startIndex, endIndex: i });
+      }
+      currentHeading = lines[i].replace(/^##\s*/, '');
+      startIndex = i;
+    }
+  }
+  if (currentHeading !== null) {
+    sectionBoundaries.push({ heading: currentHeading, startIndex: startIndex, endIndex: lines.length });
+  }
+}
+
+async function regenerateSection(btn) {
+  if (isGenerating || isEditMode) return;
+  computeSectionBoundaries();
+
+  // Find which section this button belongs to by matching heading text
+  const h2El = btn.parentElement;
+  const headingText = h2El.textContent.replace(/\u{1f504}/gu, '').trim();
+  const section = sectionBoundaries.find(s => {
+    // Compare the rendered heading (unescaped) with the stored heading
+    return s.heading === headingText || escapeHtml(s.heading) === headingText;
+  });
+  if (!section) return;
+
+  const lines = currentDocument.split('\n');
+  const sectionContent = lines.slice(section.startIndex, section.endIndex).join('\n');
+
+  btn.classList.add('loading');
+  btn.innerHTML = '...';
+
+  isGenerating = true;
+  abortController = new AbortController();
+
+  const systemPrompt = currentLang === 'zh'
+    ? '你是一位资深游戏设计师。用户会给你游戏设计文档中的一个章节。请重写这个章节，保持相同的标题，输出完整的 Markdown 格式。只输出这个章节的内容，不要输出其他章节。'
+    : 'You are a senior game designer. The user will give you one section of a game design document. Rewrite this section, keep the same heading, output in full Markdown format. Only output this section, do not output other sections.';
+
+  const userPrompt = (currentLang === 'zh'
+    ? `请重写以下章节，保持相同的标题（## 开头），输出 Markdown 格式：\n\n${sectionContent}`
+    : `Please rewrite the following section, keep the same heading (starting with ##), output in Markdown format:\n\n${sectionContent}`);
+
+  try {
+    let newText = '';
+    if (config.provider === 'openai') {
+      newText = await streamOpenAIForSection(systemPrompt, userPrompt);
+    } else {
+      newText = await streamClaudeForSection(systemPrompt, userPrompt);
+    }
+    // Splice the new content back into currentDocument
+    const before = lines.slice(0, section.startIndex).join('\n');
+    const after = lines.slice(section.endIndex).join('\n');
+    currentDocument = before + (before ? '\n' : '') + newText + (after ? '\n' : '') + after;
+    renderMarkdown(currentDocument);
+    extractTOC();
+    showToast(t('toast_gen_complete'), 'success');
+  } catch(e) {
+    if (e.name !== 'AbortError') {
+      showToast(t('gen_fail') + ': ' + e.message, 'error');
+    }
+    renderMarkdown(currentDocument);
+  } finally {
+    isGenerating = false;
+    abortController = null;
+  }
+}
+
+async function streamOpenAIForSection(systemPrompt, userPrompt) {
+  const baseUrl = (config.openai.baseUrl || '').replace(/\/+$/, '');
+  if (!baseUrl) throw new Error(t('no_api_url'));
+  const res = await fetch(baseUrl + '/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + config.openai.apiKey },
+    body: JSON.stringify({
+      model: config.openai.model || 'gpt-4o-mini',
+      messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
+      stream: true,
+      temperature: 0.7
+    }),
+    signal: abortController.signal
+  });
+  if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error?.message || 'HTTP ' + res.status); }
+  return await readSSEStreamNoRender(res, 'openai');
+}
+
+async function streamClaudeForSection(systemPrompt, userPrompt) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': config.claude.apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+    body: JSON.stringify({
+      model: config.claude.model || 'claude-sonnet-4-20250514',
+      max_tokens: 8192,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userPrompt }],
+      stream: true
+    }),
+    signal: abortController.signal
+  });
+  if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error?.message || 'HTTP ' + res.status); }
+  return await readSSEStreamNoRender(res, 'claude');
+}
+
+async function readSSEStreamNoRender(res, provider) {
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let fullText = '';
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || !trimmed.startsWith('data:')) continue;
+      const data = trimmed.slice(5).trim();
+      if (data === '[DONE]') continue;
+      try {
+        const json = JSON.parse(data);
+        let delta = '';
+        if (provider === 'openai') {
+          delta = json.choices?.[0]?.delta?.content || '';
+        } else {
+          delta = json.delta?.text || '';
+        }
+        if (delta) {
+          fullText += delta;
+        }
+      } catch(e) {}
+    }
+  }
+  return fullText;
+}
+
+/* ============================================
+   TOC
+   ============================================ */
+function extractTOC() {
+  const docEl = document.getElementById('docContent');
+  const headings = docEl.querySelectorAll('h2');
+  const tocList = document.getElementById('tocList');
+  if (headings.length === 0) { tocList.innerHTML = ''; return; }
+
+  tocList.innerHTML = '';
+  headings.forEach((h, i) => {
+    h.id = 'doc-heading-' + i;
+    const item = document.createElement('div');
+    item.className = 'toc-item';
+    item.textContent = h.textContent;
+    item.onclick = () => {
+      h.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.querySelectorAll('.toc-item').forEach(t => t.classList.remove('active'));
+      item.classList.add('active');
+    };
+    tocList.appendChild(item);
+  });
+
+  // Scroll spy
+  const docContent = document.getElementById('docContent');
+  docContent.addEventListener('scroll', () => {
+    const scrollTop = docContent.scrollTop;
+    let activeIdx = 0;
+    headings.forEach((h, i) => {
+      if (h.offsetTop - docContent.offsetTop - 100 <= scrollTop) activeIdx = i;
+    });
+    document.querySelectorAll('.toc-item').forEach((t, i) => t.classList.toggle('active', i === activeIdx));
+  });
+}
+
+/* ============================================
+   Edit Mode & AI Polish
+   ============================================ */
+function toggleEditMode() {
+  if (isEditMode) {
+    exitEditMode();
+  } else {
+    enterEditMode();
+  }
+}
+
+function enterEditMode() {
+  isEditMode = true;
+  const docEl = document.getElementById('docContent');
+  docEl.contentEditable = 'true';
+  docEl.classList.add('editable');
+  document.getElementById('editToggleBtn').textContent = t('save');
+  document.getElementById('polishBar').style.display = 'block';
+  document.getElementById('followupSection').style.display = 'none';
+  // Remove section regenerate buttons when entering edit mode
+  document.querySelectorAll('.section-regen-btn').forEach(b => b.remove());
+}
+
+function exitEditMode() {
+  isEditMode = false;
+  const docEl = document.getElementById('docContent');
+  docEl.contentEditable = 'false';
+  docEl.classList.remove('editable');
+  document.getElementById('editToggleBtn').textContent = t('edit');
+  document.getElementById('polishBar').style.display = 'none';
+  // Show follow-up bar again if document exists
+  if (currentDocument && !isGenerating) {
+    document.getElementById('followupSection').style.display = 'block';
+  }
+  // Re-render to restore section regenerate buttons
+  if (currentDocument) {
+    renderMarkdown(currentDocument);
+    extractTOC();
+  }
+}
+
+async function aiPolish() {
+  if (isGenerating) return;
+  const instructions = document.getElementById('polishInput').value.trim();
+  if (!instructions) return;
+
+  // Get current document content (from editable div, get plain text)
+  const docEl = document.getElementById('docContent');
+  const currentHtml = docEl.innerText;
+
+  isGenerating = true;
+  abortController = new AbortController();
+  const polishBtn = document.getElementById('polishBtn');
+  polishBtn.disabled = true;
+  polishBtn.textContent = t('polishing');
+
+  const systemPrompt = currentLang === 'zh'
+    ? `你是一位资深游戏设计师。用户会给你一份游戏设计文档和修改要求。请根据修改要求对文档进行润色和修改，输出完整的修改后的文档。保持 Markdown 格式。`
+    : `You are a senior game designer. The user will provide a game design document and revision instructions. Revise the document according to the instructions. Output the complete revised document in Markdown format.`;
+
+  const userPrompt = (currentLang === 'zh'
+    ? `以下是当前的游戏设计文档：\n\n${currentHtml}\n\n修改要求：${instructions}\n\n请根据修改要求润色文档，输出完整的修改后的文档。`
+    : `Here is the current game design document:\n\n${currentHtml}\n\nRevision instructions: ${instructions}\n\nPlease revise the document according to the instructions and output the complete revised document.`);
+
+  try {
+    let fullText = '';
+    if (config.provider === 'openai') {
+      fullText = await streamOpenAI(systemPrompt, userPrompt);
+    } else {
+      fullText = await streamClaude(systemPrompt, userPrompt);
+    }
+    currentDocument = fullText;
+    renderMarkdown(fullText);
+    extractTOC();
+    showToast(t('toast_gen_complete'), 'success');
+  } catch(e) {
+    if (e.name !== 'AbortError') {
+      showToast(t('gen_fail') + ': ' + e.message, 'error');
+    }
+  } finally {
+    isGenerating = false;
+    polishBtn.disabled = false;
+    polishBtn.textContent = t('ai_polish');
+    abortController = null;
+  }
+}
+
+/* ============================================
+   Follow-up / Continuation
+   ============================================ */
+async function followUp() {
+  if (isGenerating) return;
+  const instruction = document.getElementById('followupInput').value.trim();
+  if (!instruction) return;
+  if (!currentDocument) return;
+
+  isGenerating = true;
+  abortController = new AbortController();
+  const followupBtn = document.getElementById('followupBtn');
+  followupBtn.disabled = true;
+  followupBtn.textContent = t('followup_ing');
+
+  document.getElementById('streamingBadge').style.display = 'inline-flex';
+  document.getElementById('resultBadge').style.display = 'none';
+  document.getElementById('followupSection').style.display = 'none';
+
+  const systemPrompt = currentLang === 'zh'
+    ? `你是一位资深的游戏设计师。用户会给你一份完整的游戏设计文档和一个追问要求。请基于追问要求对文档进行修改，输出完整的修改后的文档。保持 Markdown 格式。`
+    : `You are a senior game designer. The user will provide a complete game design document and a follow-up instruction. Modify the document based on the follow-up instruction. Output the complete revised document in Markdown format.`;
+
+  const userPrompt = (currentLang === 'zh'
+    ? `以下是当前的游戏设计文档：\n\n${currentDocument}\n\n追问要求：${instruction}\n\n请根据追问要求修改文档，输出完整的修改后的文档。`
+    : `Here is the current game design document:\n\n${currentDocument}\n\nFollow-up instruction: ${instruction}\n\nPlease modify the document based on the follow-up instruction and output the complete revised document.`);
+
+  try {
+    let fullText = '';
+    if (config.provider === 'openai') {
+      fullText = await streamOpenAI(systemPrompt, userPrompt);
+    } else {
+      fullText = await streamClaude(systemPrompt, userPrompt);
+    }
+    currentDocument = fullText;
+    renderMarkdown(fullText);
+    extractTOC();
+    document.getElementById('streamingBadge').style.display = 'none';
+    document.getElementById('resultBadge').style.display = 'inline-flex';
+    document.getElementById('followupSection').style.display = 'block';
+    document.getElementById('followupInput').value = '';
+    showToast(t('toast_gen_complete'), 'success');
+  } catch(e) {
+    if (e.name === 'AbortError') {
+      showToast(t('toast_gen_cancel'), 'info');
+    } else {
+      showToast(t('gen_fail') + ': ' + e.message, 'error');
+    }
+    document.getElementById('streamingBadge').style.display = 'none';
+    document.getElementById('followupSection').style.display = 'block';
+  } finally {
+    isGenerating = false;
+    followupBtn.disabled = false;
+    followupBtn.textContent = t('followup_btn');
+    abortController = null;
+  }
+}
+
+/* ============================================
+   Form Actions
+   ============================================ */
+function clearForm() {
+  document.getElementById('gameIdea').value = '';
+  document.getElementById('ideaError').classList.remove('show');
+}
+
+function backToInput() {
+  document.getElementById('resultSection').classList.remove('show');
+  exitEditMode();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ============================================
+   Copy, Download, PDF Export, Word Export
+   ============================================ */
+async function copyAll() {
+  if (!currentDocument) return;
+  try { await navigator.clipboard.writeText(currentDocument); showToast(t('toast_copied'), 'success'); }
+  catch(e) { fallbackCopy(currentDocument); showToast(t('toast_copied'), 'success'); }
+}
+
+async function copySoloPrompt() {
+  if (!currentDocument) return;
+  const prompt = (currentLang === 'zh'
+    ? '请根据以下游戏设计文档，帮我开发一个可运行的游戏原型。\n\n'
+    : 'Please help me develop a playable game prototype based on the following game design document.\n\n')
+    + currentDocument
+    + (currentLang === 'zh'
+    ? '\n\n请使用 HTML5 + CSS3 + JavaScript（单文件应用）来实现这个游戏。确保游戏可以直接在浏览器中打开运行。'
+    : '\n\nPlease implement this game using HTML5 + CSS3 + JavaScript (single file application). Ensure the game can run directly in the browser.');
+  try { await navigator.clipboard.writeText(prompt); showToast(t('toast_solo'), 'success'); }
+  catch(e) { fallbackCopy(prompt); showToast(t('toast_solo'), 'success'); }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.cssText = 'position:fixed;left:-9999px';
+  document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+}
+
+function downloadDoc() {
+  if (!currentDocument) return;
+  const blob = new Blob([currentDocument], { type: 'text/markdown;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const prefix = currentLang === 'zh' ? '游戏设计文档' : 'GDD';
+  a.download = prefix + '_' + new Date().toISOString().slice(0,10) + '.md';
+  a.click(); URL.revokeObjectURL(a.href);
+  showToast(t('toast_downloaded'), 'success');
+}
+
+function exportPDF() {
+  window.print();
+}
+
+function exportWord() {
+  if (!currentDocument) return;
+  const content = document.getElementById('docContent').innerHTML;
+  const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head><meta charset='utf-8'><style>body{font-family:sans-serif;line-height:1.8;padding:20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccc;padding:8px}th{background:#f0f0f0}h1{font-size:22px}h2{font-size:16px;border-bottom:1px solid #ccc;padding-bottom:6px}h3{font-size:14px}p{margin-bottom:10px}ul,ol{padding-left:20px}li{margin-bottom:4px}blockquote{border-left:3px solid #ccc;padding-left:16px;color:#666}code{background:#f5f5f5;padding:1px 6px;border-radius:3px;font-size:12px}</style></head>
+<body>${content}</body></html>`;
+  const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'GDD_' + new Date().toISOString().slice(0,10) + '.doc';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast(t('toast_downloaded'), 'success');
+}
+
+/* ============================================
+   History
+   ============================================ */
+function loadHistory() {
+  try { window._history = JSON.parse(localStorage.getItem('gameforge_history') || '[]'); } catch(e) { window._history = []; }
+  if (window._history.length > 0) renderHistory();
+}
+
+function renderHistory() {
+  const section = document.getElementById('historySection');
+  const list = document.getElementById('historyList');
+  if (!window._history || window._history.length === 0) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  list.innerHTML = window._history.map(item => `
+    <div class="history-item" onclick="loadHistoryItem(${item.id})">
+      <div class="history-item-info">
+        <div class="history-item-title">${escapeHtml(item.idea)}</div>
+        <div class="history-item-meta">${item.genre} · ${item.date}</div>
+      </div>
+      <button class="history-item-delete" onclick="event.stopPropagation();deleteHistoryItem(${item.id})">✕</button>
+    </div>
+  `).join('');
+}
+
+function saveToHistory(idea, genre, players, cycle, doc) {
+  if (!window._history) window._history = [];
+  window._history.unshift({ id: Date.now(), idea: idea.substring(0,60), genre, players, cycle, date: new Date().toLocaleDateString(currentLang === 'zh' ? 'zh-CN' : 'en-US'), doc });
+  if (window._history.length > 20) window._history = window._history.slice(0,20);
+  try { localStorage.setItem('gameforge_history', JSON.stringify(window._history)); } catch(e) {}
+  renderHistory();
+}
+
+function loadHistoryItem(id) {
+  const item = window._history?.find(h => h.id === id);
+  if (!item) return;
+  currentDocument = item.doc;
+  renderMarkdown(item.doc);
+  extractTOC();
+  document.getElementById('resultSection').classList.add('show');
+  document.getElementById('streamingBadge').style.display = 'none';
+  document.getElementById('resultBadge').style.display = 'inline-flex';
+  document.getElementById('followupSection').style.display = 'block';
+  exitEditMode();
+  document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function deleteHistoryItem(id) {
+  window._history = (window._history || []).filter(h => h.id !== id);
+  try { localStorage.setItem('gameforge_history', JSON.stringify(window._history)); } catch(e) {}
+  renderHistory();
+}
+
+function clearHistory() {
+  window._history = [];
+  try { localStorage.removeItem('gameforge_history'); } catch(e) {}
+  renderHistory();
+  showToast(t('toast_history_cleared'), 'info');
+}
+
+/* ============================================
+   Toast
+   ============================================ */
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+  toast.innerHTML = '<span>' + message + '</span><button class="toast-close" onclick="this.parentElement.remove()">✕</button>';
+  container.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(-8px)'; toast.style.transition = 'all .2s'; setTimeout(() => toast.remove(), 200); }, 3000);
+}
+
+/* ============================================
+   Keyboard shortcut
+   ============================================ */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeConfigModal(); closeTemplateModal(); closeImportModal(); }
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && !isGenerating) generateDocument();
+  if ((e.metaKey || e.ctrlKey) && e.key === 's' && isEditMode) { e.preventDefault(); exitEditMode(); }
+});
+
+/* Save custom prompt on edit */
+document.addEventListener('input', e => {
+  if (e.target.id === 'customPromptEditor') {
+    try { localStorage.setItem('gameforge_custom_prompt', e.target.value); } catch(err) {}
+  }
+});
+</script>
+</body>
+</html>

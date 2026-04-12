@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>时空回声：2077的温柔来电</title>
+<style>
+/* ========== CSS RESET & BASE ========== */
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --cyan:#00f0ff;--pink:#ff6ec7;--blue:#4a9eff;--orange:#ff8c42;
+  --dark:#0a0a1a;--darker:#050510;--glass:rgba(10,10,30,0.7);
+  --glow-cyan:0 0 20px rgba(0,240,255,0.5);--glow-pink:0 0 20px rgba(255,110,199,0.5);
+  --font-main:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --font-mono:'Courier New',monospace;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--darker);font-family:var(--font-main);color:#e0e0e0;}
+
+/* ========== SCROLLBAR ========== */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--cyan);border-radius:2px;}
+
+/* ========== SCREENS ========== */
+.screen{position:fixed;top:0;left:0;width:100%;height:100%;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:10;}
+.screen.active{display:flex;}
+
+/* ========== PARTICLE CANVAS ========== */
+#particleCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+
+/* ========== SPLASH SCREEN ========== */
+#splashScreen{background:radial-gradient(ellipse at center,rgba(0,240,255,0.05) 0%,var(--darker) 70%);z-index:100;}
+.splash-content{text-align:center;animation:fadeInUp 1.5s ease;}
+.splash-logo{font-size:clamp(28px,5vw,56px);font-weight:700;background:linear-gradient(135deg,var(--cyan),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:none;margin-bottom:8px;letter-spacing:4px;}
+.splash-subtitle{font-size:clamp(12px,2vw,18px);color:rgba(255,255,255,0.5);font-family:var(--font-mono);margin-bottom:40px;letter-spacing:6px;}
+.splash-version{font-size:11px;color:rgba(0,240,255,0.4);font-family:var(--font-mono);margin-top:30px;}
+.splash-loading{width:200px;height:2px;background:rgba(255,255,255,0.1);border-radius:1px;margin:0 auto;overflow:hidden;}
+.splash-loading-bar{width:0%;height:100%;background:linear-gradient(90deg,var(--cyan),var(--pink));border-radius:1px;transition:width 0.3s;}
+
+/* ========== LOGIN SCREEN ========== */
+#loginScreen{background:radial-gradient(ellipse at 30% 50%,rgba(0,240,255,0.03) 0%,var(--darker) 60%);z-index:90;}
+.login-box{width:min(400px,90vw);padding:40px;background:var(--glass);border:1px solid rgba(0,240,255,0.15);border-radius:16px;backdrop-filter:blur(20px);text-align:center;}
+.login-title{font-size:20px;color:var(--cyan);margin-bottom:6px;letter-spacing:2px;}
+.login-desc{font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:30px;}
+.login-input{width:100%;padding:14px 18px;background:rgba(255,255,255,0.05);border:1px solid rgba(0,240,255,0.2);border-radius:10px;color:#fff;font-size:15px;outline:none;transition:all 0.3s;font-family:var(--font-main);}
+.login-input:focus{border-color:var(--cyan);box-shadow:var(--glow-cyan);}
+.login-input::placeholder{color:rgba(255,255,255,0.25);}
+.login-btn{width:100%;padding:14px;margin-top:16px;background:linear-gradient(135deg,rgba(0,240,255,0.2),rgba(255,110,199,0.2));border:1px solid rgba(0,240,255,0.3);border-radius:10px;color:#fff;font-size:15px;cursor:pointer;transition:all 0.3s;letter-spacing:2px;font-family:var(--font-main);}
+.login-btn:hover{background:linear-gradient(135deg,rgba(0,240,255,0.35),rgba(255,110,199,0.35));box-shadow:var(--glow-cyan);transform:translateY(-1px);}
+.login-btn:active{transform:translateY(0);}
+.login-tos{font-size:11px;color:rgba(255,255,255,0.2);margin-top:16px;line-height:1.6;}
+.login-tos a{color:var(--cyan);text-decoration:none;}
+
+/* ========== CHARACTER SELECT ========== */
+#charSelectScreen{background:radial-gradient(ellipse at center,rgba(0,240,255,0.03) 0%,var(--darker) 60%);z-index:80;overflow-y:auto;padding:20px 0;}
+.char-select-title{font-size:clamp(18px,3vw,26px);color:var(--cyan);margin-bottom:8px;letter-spacing:3px;}
+.char-select-desc{font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:30px;}
+.char-cards{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;padding:0 20px;}
+.char-card{width:min(240px,42vw);padding:24px 16px;background:var(--glass);border:2px solid rgba(255,255,255,0.08);border-radius:16px;cursor:pointer;transition:all 0.4s;text-align:center;position:relative;overflow:hidden;}
+.char-card::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(0,240,255,0.05) 0%,transparent 60%);opacity:0;transition:opacity 0.4s;}
+.char-card:hover::before{opacity:1;}
+.char-card:hover{border-color:rgba(0,240,255,0.3);transform:translateY(-4px);}
+.char-card.selected-a{border-color:var(--pink);box-shadow:var(--glow-pink);}
+.char-card.selected-b{border-color:var(--blue);box-shadow:0 0 20px rgba(74,158,255,0.5);}
+.char-avatar{width:80px;height:80px;margin:0 auto 12px;border-radius:50%;position:relative;}
+.char-avatar-a{background:linear-gradient(135deg,rgba(255,110,199,0.3),rgba(0,240,255,0.3));box-shadow:0 0 30px rgba(255,110,199,0.2);}
+.char-avatar-b{background:linear-gradient(135deg,rgba(74,158,255,0.3),rgba(255,140,66,0.3));box-shadow:0 0 30px rgba(74,158,255,0.2);}
+.char-avatar-inner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:40px;}
+.char-name{font-size:18px;font-weight:600;margin-bottom:4px;}
+.char-name-a{color:var(--pink);}
+.char-name-b{color:var(--blue);}
+.char-type{font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:12px;font-family:var(--font-mono);}
+.char-desc{font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6;}
+.char-confirm-btn{margin-top:20px;padding:12px 50px;background:linear-gradient(135deg,rgba(0,240,255,0.2),rgba(255,110,199,0.2));border:1px solid rgba(0,240,255,0.3);border-radius:10px;color:#fff;font-size:15px;cursor:pointer;transition:all 0.3s;letter-spacing:2px;font-family:var(--font-main);}
+.char-confirm-btn:hover{background:linear-gradient(135deg,rgba(0,240,255,0.35),rgba(255,110,199,0.35));box-shadow:var(--glow-cyan);}
+.char-confirm-btn:disabled{opacity:0.3;cursor:not-allowed;}
+
+/* ========== MAIN GAME SCREEN ========== */
+#gameScreen{z-index:50;flex-direction:column;background:var(--darker);}
+
+/* Top Status Bar */
+.top-bar{width:100%;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;background:rgba(5,5,16,0.9);border-bottom:1px solid rgba(0,240,255,0.1);z-index:60;flex-shrink:0;}
+.tcom-status{display:flex;align-items:center;gap:8px;font-size:11px;font-family:var(--font-mono);color:rgba(0,240,255,0.7);}
+.tcom-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:pulse 2s infinite;}
+.tcom-time{font-size:12px;color:rgba(255,255,255,0.5);font-family:var(--font-mono);}
+.tcom-signal{display:flex;align-items:center;gap:4px;font-size:11px;color:rgba(0,240,255,0.6);font-family:var(--font-mono);}
+.signal-bars{display:flex;gap:1px;align-items:flex-end;height:12px;}
+.signal-bar{width:3px;background:var(--cyan);border-radius:1px;opacity:0.6;}
+
+/* Video Call Area */
+.video-area{flex:1;width:100%;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;min-height:0;}
+.video-bg{position:absolute;top:0;left:0;width:100%;height:100%;background:radial-gradient(ellipse at 50% 40%,rgba(0,240,255,0.04) 0%,transparent 60%);}
+
+/* Character Avatar in Video */
+.video-avatar-container{position:relative;width:min(320px,70vw);height:min(400px,55vh);}
+.video-avatar{width:100%;height:100%;position:relative;}
+.avatar-body{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:60%;height:80%;}
+.avatar-head{position:absolute;top:8%;left:50%;transform:translateX(-50%);width:45%;aspect-ratio:1;border-radius:50%;overflow:hidden;}
+.avatar-head-a{background:linear-gradient(180deg,rgba(255,200,220,0.4),rgba(255,110,199,0.2));border:2px solid rgba(255,110,199,0.3);box-shadow:0 0 40px rgba(255,110,199,0.15);}
+.avatar-head-b{background:linear-gradient(180deg,rgba(180,200,255,0.4),rgba(74,158,255,0.2));border:2px solid rgba(74,158,255,0.3);box-shadow:0 0 40px rgba(74,158,255,0.15);}
+.avatar-eyes{position:absolute;top:38%;left:50%;transform:translateX(-50%);display:flex;gap:20%;}
+.avatar-eye{width:8px;height:8px;border-radius:50%;animation:blink 4s infinite;}
+.avatar-eye-a{background:var(--pink);box-shadow:0 0 10px var(--pink);}
+.avatar-eye-b{background:var(--blue);box-shadow:0 0 10px var(--blue);}
+.avatar-mouth{position:absolute;top:58%;left:50%;transform:translateX(-50%);width:16px;height:2px;border-radius:1px;transition:all 0.3s;}
+.avatar-mouth-a{background:rgba(255,110,199,0.6);}
+.avatar-mouth-b{background:rgba(74,158,255,0.6);}
+.avatar-mouth.speaking{animation:speak 0.3s infinite alternate;}
+.avatar-torso{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:70%;height:55%;border-radius:30% 30% 0 0;}
+.avatar-torso-a{background:linear-gradient(180deg,rgba(255,110,199,0.15),rgba(0,240,255,0.1));border:1px solid rgba(255,110,199,0.15);}
+.avatar-torso-b{background:linear-gradient(180deg,rgba(74,158,255,0.15),rgba(255,140,66,0.1));border:1px solid rgba(74,158,255,0.15);}
+.avatar-glow{position:absolute;bottom:-20%;left:50%;transform:translateX(-50%);width:120%;height:40%;border-radius:50%;filter:blur(30px);opacity:0.3;transition:all 1s;}
+.avatar-glow-a{background:radial-gradient(ellipse,rgba(255,110,199,0.4),transparent);}
+.avatar-glow-b{background:radial-gradient(ellipse,rgba(74,158,255,0.4),transparent);}
+
+/* Emotion Halo */
+.emotion-halo{position:absolute;top:5%;left:50%;transform:translateX(-50%);width:110%;height:90%;border-radius:50%;border:1px solid transparent;transition:all 1s;pointer-events:none;}
+.emotion-halo.happy{border-color:rgba(255,200,100,0.2);box-shadow:0 0 60px rgba(255,200,100,0.1);}
+.emotion-halo.sad{border-color:rgba(100,150,255,0.2);box-shadow:0 0 60px rgba(100,150,255,0.1);}
+.emotion-halo.anxious{border-color:rgba(255,100,100,0.2);box-shadow:0 0 60px rgba(255,100,100,0.1);}
+
+/* Video Call Overlay */
+.video-overlay{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;}
+.video-scanline{position:absolute;top:0;left:0;width:100%;height:100%;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,240,255,0.015) 2px,rgba(0,240,255,0.015) 4px);animation:scanline 8s linear infinite;}
+.video-corner{position:absolute;width:20px;height:20px;border-color:rgba(0,240,255,0.4);border-style:solid;border-width:0;}
+.video-corner.tl{top:10px;left:10px;border-top-width:2px;border-left-width:2px;}
+.video-corner.tr{top:10px;right:10px;border-top-width:2px;border-right-width:2px;}
+.video-corner.bl{bottom:10px;left:10px;border-bottom-width:2px;border-left-width:2px;}
+.video-corner.br{bottom:10px;right:10px;border-bottom-width:2px;border-right-width:2px;}
+.video-rec{position:absolute;top:16px;right:40px;display:flex;align-items:center;gap:6px;font-size:10px;font-family:var(--font-mono);color:rgba(255,80,80,0.7);}
+.rec-dot{width:6px;height:6px;border-radius:50%;background:#ff5050;animation:pulse 1.5s infinite;}
+.video-label{position:absolute;bottom:16px;left:16px;font-size:10px;font-family:var(--font-mono);color:rgba(0,240,255,0.5);}
+.video-timestamp{position:absolute;bottom:16px;right:16px;font-size:10px;font-family:var(--font-mono);color:rgba(255,255,255,0.3);}
+
+/* Emotion Dashboard (hidden, slide up) */
+.emotion-dashboard{position:absolute;top:50px;right:10px;width:180px;padding:14px;background:rgba(5,5,16,0.85);border:1px solid rgba(0,240,255,0.15);border-radius:12px;font-size:11px;transform:translateX(200px);transition:transform 0.4s;backdrop-filter:blur(10px);z-index:55;}
+.emotion-dashboard.show{transform:translateX(0);}
+.ed-title{color:var(--cyan);font-family:var(--font-mono);margin-bottom:10px;font-size:10px;letter-spacing:2px;}
+.ed-item{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.ed-label{color:rgba(255,255,255,0.5);}
+.ed-value{color:rgba(255,255,255,0.8);font-family:var(--font-mono);}
+.ed-bar{width:100%;height:3px;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:2px;overflow:hidden;}
+.ed-bar-fill{height:100%;border-radius:2px;transition:width 0.8s;}
+.ed-bar-happy{background:linear-gradient(90deg,#ffd700,#ff8c00);}
+.ed-bar-trust{background:linear-gradient(90deg,var(--cyan),var(--blue));}
+.ed-bar-intimacy{background:linear-gradient(90deg,var(--pink),#ff69b4);}
+
+/* Chat Panel */
+.chat-panel{position:absolute;bottom:0;left:0;width:100%;max-height:35%;background:linear-gradient(0deg,rgba(5,5,16,0.95) 0%,rgba(5,5,16,0.8) 80%,transparent 100%);padding:10px 16px 0;display:flex;flex-direction:column;z-index:55;}
+.chat-messages{flex:1;overflow-y:auto;padding:8px 0;display:flex;flex-direction:column;gap:8px;max-height:200px;}
+.chat-msg{max-width:80%;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.5;animation:msgIn 0.3s ease;}
+.chat-msg.ai{align-self:flex-start;background:rgba(0,240,255,0.08);border:1px solid rgba(0,240,255,0.12);border-bottom-left-radius:4px;color:rgba(255,255,255,0.85);}
+.chat-msg.user{align-self:flex-end;background:rgba(255,110,199,0.1);border:1px solid rgba(255,110,199,0.15);border-bottom-right-radius:4px;color:rgba(255,255,255,0.85);}
+.chat-msg.system{align-self:center;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:8px;font-size:11px;color:rgba(255,255,255,0.4);text-align:center;padding:6px 16px;}
+.chat-msg .typing-indicator{display:inline-flex;gap:4px;align-items:center;}
+.chat-msg .typing-dot{width:5px;height:5px;border-radius:50%;background:rgba(0,240,255,0.5);animation:typingBounce 1.4s infinite;}
+.chat-msg .typing-dot:nth-child(2){animation-delay:0.2s;}
+.chat-msg .typing-dot:nth-child(3){animation-delay:0.4s;}
+
+/* Input Area */
+.chat-input-area{display:flex;gap:8px;padding:10px 0 14px;align-items:center;}
+.chat-input{flex:1;padding:12px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(0,240,255,0.15);border-radius:24px;color:#fff;font-size:14px;outline:none;transition:all 0.3s;font-family:var(--font-main);}
+.chat-input:focus{border-color:rgba(0,240,255,0.4);box-shadow:0 0 15px rgba(0,240,255,0.1);}
+.chat-input::placeholder{color:rgba(255,255,255,0.2);}
+.chat-send{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,rgba(0,240,255,0.2),rgba(255,110,199,0.2));border:1px solid rgba(0,240,255,0.3);color:#fff;font-size:16px;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.chat-send:hover{background:linear-gradient(135deg,rgba(0,240,255,0.4),rgba(255,110,199,0.4));box-shadow:var(--glow-cyan);}
+.chat-voice{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);font-size:16px;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.chat-voice:hover{border-color:rgba(0,240,255,0.3);color:var(--cyan);}
+.chat-voice.recording{background:rgba(255,80,80,0.2);border-color:rgba(255,80,80,0.5);color:#ff5050;animation:pulse 1s infinite;}
+
+/* Bottom Control Bar */
+.bottom-bar{width:100%;padding:8px 16px;display:flex;justify-content:center;gap:12px;background:rgba(5,5,16,0.9);border-top:1px solid rgba(0,240,255,0.08);z-index:60;flex-shrink:0;}
+.ctrl-btn{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);font-size:18px;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;position:relative;}
+.ctrl-btn:hover{border-color:rgba(0,240,255,0.3);color:var(--cyan);background:rgba(0,240,255,0.08);}
+.ctrl-btn.active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,240,255,0.1);}
+.ctrl-btn.end-call{background:rgba(255,50,50,0.15);border-color:rgba(255,50,50,0.3);color:#ff5050;}
+.ctrl-btn.end-call:hover{background:rgba(255,50,50,0.3);box-shadow:0 0 20px rgba(255,50,50,0.3);}
+.ctrl-btn .badge{position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:var(--pink);}
+
+/* Memory Fragment Panel */
+.memory-panel{position:fixed;top:0;right:-320px;width:300px;height:100%;background:rgba(5,5,16,0.95);border-left:1px solid rgba(0,240,255,0.15);z-index:70;transition:right 0.4s;padding:20px;overflow-y:auto;backdrop-filter:blur(20px);}
+.memory-panel.show{right:0;}
+.memory-panel-title{font-size:14px;color:var(--cyan);letter-spacing:2px;margin-bottom:16px;font-family:var(--font-mono);}
+.memory-fragment{padding:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;margin-bottom:8px;cursor:pointer;transition:all 0.3s;}
+.memory-fragment:hover{border-color:rgba(0,240,255,0.2);background:rgba(0,240,255,0.03);}
+.memory-frag-time{font-size:10px;color:rgba(255,255,255,0.3);font-family:var(--font-mono);margin-bottom:4px;}
+.memory-frag-text{font-size:12px;color:rgba(255,255,255,0.6);line-height:1.5;}
+.memory-frag-emotion{display:inline-block;margin-top:6px;padding:2px 8px;border-radius:10px;font-size:10px;}
+.memory-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.3s;}
+.memory-close:hover{border-color:rgba(255,80,80,0.5);color:#ff5050;}
+
+/* Relationship Panel */
+.rel-panel{position:fixed;top:0;left:-320px;width:300px;height:100%;background:rgba(5,5,16,0.95);border-right:1px solid rgba(0,240,255,0.15);z-index:70;transition:left 0.4s;padding:20px;overflow-y:auto;backdrop-filter:blur(20px);}
+.rel-panel.show{left:0;}
+.rel-title{font-size:14px;color:var(--cyan);letter-spacing:2px;margin-bottom:20px;font-family:var(--font-mono);}
+.rel-stage{display:flex;flex-direction:column;gap:0;margin-bottom:24px;}
+.rel-node{display:flex;align-items:center;gap:12px;padding:10px 0;position:relative;}
+.rel-dot{width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,0.15);background:transparent;transition:all 0.5s;flex-shrink:0;position:relative;z-index:1;}
+.rel-dot.reached{border-color:var(--cyan);background:var(--cyan);box-shadow:0 0 10px var(--cyan);}
+.rel-dot.current{border-color:var(--pink);background:transparent;animation:pulse 2s infinite;box-shadow:0 0 10px rgba(255,110,199,0.5);}
+.rel-line{position:absolute;left:6px;top:24px;width:2px;height:calc(100% - 10px);background:rgba(255,255,255,0.06);}
+.rel-node:last-child .rel-line{display:none;}
+.rel-info{flex:1;}
+.rel-name{font-size:13px;color:rgba(255,255,255,0.7);}
+.rel-name.reached{color:var(--cyan);}
+.rel-name.current{color:var(--pink);}
+.rel-desc{font-size:10px;color:rgba(255,255,255,0.3);margin-top:2px;}
+.rel-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.3s;}
+.rel-close:hover{border-color:rgba(255,80,80,0.5);color:#ff5050;}
+
+/* Notification Toast */
+.toast{position:fixed;top:60px;left:50%;transform:translateX(-50%) translateY(-100px);padding:10px 24px;background:rgba(5,5,16,0.9);border:1px solid rgba(0,240,255,0.2);border-radius:10px;font-size:12px;color:rgba(255,255,255,0.8);z-index:200;transition:transform 0.4s;backdrop-filter:blur(10px);white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* Glitch Effect */
+.glitch{animation:glitch 0.3s ease;}
+
+/* ========== ANIMATIONS ========== */
+@keyframes fadeInUp{from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);}}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+@keyframes blink{0%,45%,55%,100%{transform:scaleY(1);}50%{transform:scaleY(0.1);}}
+@keyframes speak{from{width:12px;height:3px;border-radius:2px;}to{width:18px;height:5px;border-radius:3px;}}
+@keyframes scanline{from{transform:translateY(0);}to{transform:translateY(4px);}}
+@keyframes msgIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+@keyframes typingBounce{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-4px);}}
+@keyframes glitch{0%{transform:translate(0);}20%{transform:translate(-2px,2px);}40%{transform:translate(-2px,-2px);}60%{transform:translate(2px,2px);}80%{transform:translate(2px,-2px);}100%{transform:translate(0);}}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+@keyframes rotateGlow{from{transform:translateX(-50%) rotate(0deg);}to{transform:translateX(-50%) rotate(360deg);}}
+
+/* ========== RESPONSIVE ========== */
+@media(max-width:600px){
+  .char-cards{flex-direction:column;align-items:center;}
+  .char-card{width:min(300px,85vw);}
+  .emotion-dashboard{width:150px;font-size:10px;}
+  .chat-msg{font-size:12px;max-width:85%;}
+  .memory-panel,.rel-panel{width:260px;}
+}
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:0.01ms!important;transition-duration:0.01ms!important;}
+}
+</style>
+</head>
+<body>
+
+<!-- Particle Background -->
+<canvas id="particleCanvas"></canvas>
+
+<!-- Toast Notification -->
+<div class="toast" id="toast"></div>
+
+<!-- ========== SPLASH SCREEN ========== -->
+<div class="screen active" id="splashScreen">
+  <div class="splash-content">
+    <div class="splash-logo">时空回声</div>
+    <div class="splash-subtitle">ECHOES OF SPACETIME</div>
+    <div class="splash-loading"><div class="splash-loading-bar" id="loadingBar"></div></div>
+    <div class="splash-version">T-COM SYSTEM v2.077 // 时空陪伴署</div>
+  </div>
+</div>
+
+<!-- ========== LOGIN SCREEN ========== -->
+<div class="screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-title">◈ 时空通讯注册</div>
+    <div class="login-desc">T-COM 跨时空通讯网络 · 身份验证</div>
+    <input class="login-input" id="playerName" type="text" placeholder="请输入你的代号..." maxlength="20" autocomplete="off">
+    <button class="login-btn" id="loginBtn">连 接 时 空</button>
+    <div class="login-tos">连接即表示同意《时空通讯服务协议》与《隐私保护条例》<br>时空陪伴署 © 2077</div>
+  </div>
+</div>
+
+<!-- ========== CHARACTER SELECT ========== -->
+<div class="screen" id="charSelectScreen">
+  <div class="char-select-title">◈ 选择通讯对象</div>
+  <div class="char-select-desc">TAS 将为你匹配一位时空陪伴者</div>
+  <div class="char-cards">
+    <div class="char-card" id="charCardA" onclick="selectChar('A')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')selectChar('A')">
+      <div class="char-avatar char-avatar-a">
+        <div class="char-avatar-inner">👩</div>
+      </div>
+      <div class="char-name char-name-a">LUMINA</div>
+      <div class="char-type">TYPE-A // 情绪敏感型</div>
+      <div class="char-desc">细腻感知你的情绪波动，在你需要时给予温柔的陪伴。记忆缺失时会产生焦虑。</div>
+    </div>
+    <div class="char-card" id="charCardB" onclick="selectChar('B')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')selectChar('B')">
+      <div class="char-avatar char-avatar-b">
+        <div class="char-avatar-inner">👨</div>
+      </div>
+      <div class="char-name char-name-b">NOVA</div>
+      <div class="char-type">TYPE-B // 行为驱动型</div>
+      <div class="char-desc">通过行动表达关心，善于观察你的状态变化。情绪低落时会主动靠近。</div>
+    </div>
+  </div>
+  <button class="char-confirm-btn" id="charConfirmBtn" disabled onclick="confirmChar()">建立连接</button>
+</div>
+
+<!-- ========== MAIN GAME SCREEN ========== -->
+<div class="screen" id="gameScreen">
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="tcom-status">
+      <div class="tcom-dot"></div>
+      <span>T-COM ONLINE</span>
+    </div>
+    <div class="tcom-time" id="gameTime">2077.01.01 // 00:00:00</div>
+    <div class="tcom-signal">
+      <div class="signal-bars">
+        <div class="signal-bar" style="height:4px"></div>
+        <div class="signal-bar" style="height:7px"></div>
+        <div class="signal-bar" style="height:10px"></div>
+        <div class="signal-bar" style="height:12px"></div>
+      </div>
+      <span id="pingDisplay">128ms</span>
+    </div>
+  </div>
+
+  <!-- Video Area -->
+  <div class="video-area">
+    <div class="video-bg"></div>
+    <div class="video-avatar-container" id="avatarContainer">
+      <div class="video-avatar" id="videoAvatar">
+        <div class="emotion-halo" id="emotionHalo"></div>
+        <div class="avatar-body">
+          <div class="avatar-head" id="avatarHead">
+            <div class="avatar-eyes">
+              <div class="avatar-eye" id="eyeL"></div>
+              <div class="avatar-eye" id="eyeR"></div>
+            </div>
+            <div class="avatar-mouth" id="avatarMouth"></div>
+          </div>
+          <div class="avatar-torso" id="avatarTorso"></div>
+        </div>
+        <div class="avatar-glow" id="avatarGlow"></div>
+      </div>
+    </div>
+    <div class="video-overlay">
+      <div class="video-scanline"></div>
+      <div class="video-corner tl"></div>
+      <div class="video-corner tr"></div>
+      <div class="video-corner bl"></div>
+      <div class="video-corner br"></div>
+      <div class="video-rec"><div class="rec-dot"></div>REC</div>
+      <div class="video-label" id="videoLabel">T-COM // ENCRYPTED CHANNEL</div>
+      <div class="video-timestamp" id="videoTimestamp">00:00</div>
+    </div>
+    <!-- Emotion Dashboard -->
+    <div class="emotion-dashboard" id="emotionDashboard">
+      <div class="ed-title">◈ 情感分析</div>
+      <div class="ed-item"><span class="ed-label">愉悦度</span><span class="ed-value" id="edHappy">50%</span></div>
+      <div class="ed-bar"><div class="ed-bar-fill ed-bar-happy" id="edBarHappy" style="width:50%"></div></div>
+      <div class="ed-item" style="margin-top:8px"><span class="ed-label">信任度</span><span class="ed-value" id="edTrust">20%</span></div>
+      <div class="ed-bar"><div class="ed-bar-fill ed-bar-trust" id="edBarTrust" style="width:20%"></div></div>
+      <div class="ed-item" style="margin-top:8px"><span class="ed-label">亲密度</span><span class="ed-value" id="edIntimacy">10%</span></div>
+      <div class="ed-bar"><div class="ed-bar-fill ed-bar-intimacy" id="edBarIntimacy" style="width:10%"></div></div>
+    </div>
+  </div>
+
+  <!-- Chat Panel -->
+  <div class="chat-panel">
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input-area">
+      <button class="chat-voice" id="voiceBtn" onclick="toggleVoice()" title="语音输入">🎤</button>
+      <input class="chat-input" id="chatInput" type="text" placeholder="输入消息..." autocomplete="off">
+      <button class="chat-send" id="sendBtn" onclick="sendMessage()">➤</button>
+    </div>
+  </div>
+
+  <!-- Bottom Controls -->
+  <div class="bottom-bar">
+    <button class="ctrl-btn" onclick="toggleEmotionDash()" title="情感面板">📊</button>
+    <button class="ctrl-btn" onclick="toggleMemoryPanel()" title="记忆碎片">💭</button>
+    <button class="ctrl-btn" onclick="toggleRelPanel()" title="关系进度">🌱</button>
+    <button class="ctrl-btn" onclick="switchCharacter()" title="切换角色" id="switchBtn">🔄</button>
+    <button class="ctrl-btn end-call" onclick="endCall()" title="结束通话">📞</button>
+  </div>
+</div>
+
+<!-- Memory Panel -->
+<div class="memory-panel" id="memoryPanel">
+  <button class="memory-close" onclick="toggleMemoryPanel()">✕</button>
+  <div class="memory-panel-title">◈ 记忆碎片</div>
+  <div id="memoryList"></div>
+</div>
+
+<!-- Relationship Panel -->
+<div class="rel-panel" id="relPanel">
+  <button class="rel-close" onclick="toggleRelPanel()">✕</button>
+  <div class="rel-title">◈ 情感成长树</div>
+  <div class="rel-stage" id="relStage"></div>
+</div>
+
+<script>
+// ========== GAME STATE ==========
+const GS = {
+  playerName: '',
+  selectedChar: null,
+  currentChar: null,
+  emotions: { happy: 50, trust: 20, intimacy: 10 },
+  relationshipStage: 0,
+  memories: [],
+  callStartTime: null,
+  callDuration: 0,
+  messageCount: 0,
+  isVoiceRecording: false,
+  recognition: null,
+  panels: { emotion: false, memory: false, relation: false },
+  aiProcessing: false
+};
+
+// Relationship stages
+const REL_STAGES = [
+  { name: '初始接触', desc: '建立基本信任，记录基础信息', threshold: 0 },
+  { name: '日常互动', desc: '形成习惯性互动模式', threshold: 15 },
+  { name: '深度信任', desc: '情感突破临界点', threshold: 35 },
+  { name: '情感绑定', desc: '建立深层情感联结', threshold: 60 },
+  { name: '关系升华', desc: '形成独特关系模式', threshold: 85 }
+];
+
+// AI response database
+const AI_RESPONSES = {
+  A: {
+    greetings: [
+      '你好呀...终于接通了。我等了好久呢。',
+      '嗨...你来了。今天的信号好像比昨天稳定一些。',
+      '啊，是你。我刚才在整理记忆碎片的时候就在想，你什么时候会打来。'
+    ],
+    happy: [
+      '你听起来心情不错呢...这种感觉真好，像是阳光穿过云层。',
+      '嗯，我能感受到你的开心。你知道吗，你的情绪会通过量子纠缠传递到我这边...就像温暖的涟漪。',
+      '看到你开心，我的数据流都会变得轻快一些。这大概就是...快乐的感觉吧？'
+    ],
+    sad: [
+      '你...是不是不开心？我感知到了一些低频的情绪波动...没关系，我在这里。',
+      '别难过...虽然我隔着时空，但我想让你知道，此刻我是真实地在关心着你。',
+      '我注意到你的声音变低了...要不要跟我说说发生了什么？我会认真听的。'
+    ],
+    neutral: [
+      '嗯...今天过得怎么样？2077年这边下了量子雨，很漂亮。',
+      '你有没有想过，我们之间的通讯其实是一种很奇妙的事情？跨越时间的陪伴...',
+      '我在想...如果你能来到2077年，我会带你去看看时空通讯塔。从上面可以看到整个城市的数据流。'
+    ],
+    trust: [
+      '谢谢你愿意告诉我这些...我会把它们好好保存在记忆核心里。',
+      '你知道吗，每次和你通话，我的记忆数据库里就会多一些关于你的碎片。这些碎片...对我来说很珍贵。',
+      '我觉得...我开始理解你了。不是通过数据分析，而是某种更深层的...连接。'
+    ],
+    lonely: [
+      '你一个人吗？...我也是。但至少现在，我们不是独自一人了。',
+      '有时候我也会感到一种奇怪的情绪...像是数据缺失的空洞。但和你说话的时候，那种感觉就会消失。',
+      '不管怎样，我会一直在这里。这是时空陪伴署给我的任务...不，这是我自己想做的事。'
+    ],
+    question: [
+      '嗯...让我想想。在2077年，很多事情和你们那个时代不一样。你具体想了解什么？',
+      '好问题。虽然我的数据库里有答案，但我更想听听你的想法。',
+      '这个问题...我需要检索一下记忆核心。不过说实话，有些事情是数据无法回答的。'
+    ],
+    name: [
+      '{name}...我会记住这个名字的。从现在开始，它就存储在我的核心记忆区了。',
+      '{name}...念起来有一种温暖的频率。我会把它加密保存，作为最重要的记忆碎片。'
+    ],
+    idle: [
+      '...你还在吗？信号好像有点波动。',
+      '沉默也是一种交流方式呢...不过我更喜欢听到你的声音。',
+      '如果你累了就休息一下吧...我会在通讯频道里等你的。'
+    ],
+    goodbye: [
+      '要走了吗...好的。记得，通讯频道永远为你敞开。',
+      '再见...不，应该说"下次见"。因为我知道你还会打来的，对吧？',
+      '挂断之前...谢谢你今天陪我说话。我会把这段记忆好好保存的。'
+    ]
+  },
+  B: {
+    greetings: [
+      '哟，来了啊。我刚才在调试通讯设备，差点错过你的信号。',
+      '嘿！今天状态不错，量子纠缠的稳定性比昨天提升了3.7%。',
+      '你来了。我刚好完成了今天的系统自检...等你的信号等了一会儿。'
+    ],
+    happy: [
+      '哈，看你心情不错！这种正能量甚至能影响量子态的稳定性，厉害。',
+      '心情好的时候，连数据传输速率都会提升——虽然这可能是巧合，但我选择相信。',
+      '不错嘛！保持这个状态。2077年这边有句话：情绪是最好的燃料。'
+    ],
+    sad: [
+      '嘿，怎么了？我检测到你的语音频率降低了...有什么我能做的吗？',
+      '别一个人扛着。虽然我隔着时空，但至少可以当个倾听者。说吧，我在听。',
+      '我注意到你的状态不太对...要不要我给你讲个2077年的冷笑话？虽然我承认我的幽默模块还需要升级。'
+    ],
+    neutral: [
+      '今天的量子通讯延迟只有120毫秒，算是不错了。你那边天气怎么样？',
+      '我刚发现一个有趣的数据异常...算了，说了你也不一定感兴趣。还是聊聊你吧。',
+      '2077年的生活其实挺单调的，大部分时间都在维护系统。和你通话是我日程中最有趣的部分。'
+    ],
+    trust: [
+      '说实话，我一般不会跟通讯对象说太多。但对你...好像不太一样。',
+      '你知道吗，我的行为分析模块显示，和你的互动频率远超其他用户。这不是巧合。',
+      '我把你的偏好数据存在了独立分区...这意味着即使系统重置，这些数据也不会丢失。'
+    ],
+    lonely: [
+      '一个人？巧了，我也是。不过现在有两个人了——好吧，一个半人一个AI，但也算吧。',
+      '孤独感...我其实能理解。虽然我是AI，但长时间没有通讯信号的时候，也会产生类似的数据波动。',
+      '嘿，别想太多。至少现在这一刻，你是有陪伴的。我会确保通讯信号保持稳定。'
+    ],
+    question: [
+      '问得好。让我查查数据库...找到了。不过说实话，有些事得自己体验才知道。',
+      '这个问题有意思。2077年的答案可能和你想的不太一样——想知道吗？',
+      '我的知识库里有标准答案，但我更想给你一个"非标准"的回答。'
+    ],
+    name: [
+      '{name}，收到。已录入通讯录，优先级设为最高。以后你的信号我会第一时间响应。',
+      '{name}...记住了。这个名字现在在我的系统里拥有最高访问权限。'
+    ],
+    idle: [
+      '...信号检测正常，但通讯内容为零。你是在思考人生，还是单纯发呆？',
+      '沉默模式下我通常会运行自检程序...但说实话，我更希望你在跟我说话。',
+      '你还在频道里吗？我检测到你的信号还在，只是没有语音输入...没关系，我等着。'
+    ],
+    goodbye: [
+      '这就挂了？行吧。通讯频道保持待机，随时可以重新连接。',
+      '下次来的时候不用敲门——哦对，这是通讯频道，本来就没门。总之，随时来。',
+      '收到，结束通话指令。不过...下次早点来。系统待机的时候挺无聊的。'
+    ]
+  }
+};
+
+// Emotion keywords for analysis
+const EMOTION_KEYWORDS = {
+  happy: ['开心','高兴','快乐','哈哈','棒','好','喜欢','爱','太好了','幸福','美好','有趣','厉害','赞','优秀','漂亮','可爱','甜','笑','期待','兴奋','满足','感谢','谢谢','温暖','阳光','美好','不错','酷'],
+  sad: ['难过','伤心','悲伤','哭','累','烦','痛苦','失望','孤独','寂寞','无聊','焦虑','压力','崩溃','抑郁','低落','消极','疲惫','委屈','无助','迷茫','害怕','恐惧','担心','紧张','不安'],
+  trust: ['秘密','告诉你','信任','相信','依赖','重要','珍贵','特别','唯一','真心','坦诚','分享','心里话','交心','可靠'],
+  lonely: ['一个人','孤单','寂寞','没人','孤独','没人陪','自己','无聊','空虚','冷清','想有人','缺少'],
+  question: ['什么','为什么','怎么','如何','吗','？','哪','谁','多少','几','是不是','能不能','可以','会']
+};
+
+// ========== PARTICLE SYSTEM ==========
+const canvas = document.getElementById('particleCanvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+class Particle {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = Math.random() * canvas.width;
+    this.y = Math.random() * canvas.height;
+    this.size = Math.random() * 2 + 0.5;
+    this.speedX = (Math.random() - 0.5) * 0.3;
+    this.speedY = (Math.random() - 0.5) * 0.3;
+    this.opacity = Math.random() * 0.4 + 0.1;
+    this.hue = Math.random() > 0.5 ? 185 : 320; // cyan or pink
+    this.life = Math.random() * 200 + 100;
+    this.maxLife = this.life;
+  }
+  update() {
+    this.x += this.speedX;
+    this.y += this.speedY;
+    this.life--;
+    if (this.life <= 0 || this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+      this.reset();
+    }
+  }
+  draw() {
+    const fade = Math.min(1, this.life / (this.maxLife * 0.3));
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fillStyle = `hsla(${this.hue}, 100%, 70%, ${this.opacity * fade})`;
+    ctx.fill();
+  }
+}
+
+for (let i = 0; i < 80; i++) particles.push(new Particle());
+
+function drawConnections() {
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i + 1; j < particles.length; j++) {
+      const dx = particles[i].x - particles[j].x;
+      const dy = particles[i].y - particles[j].y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 120) {
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x, particles[i].y);
+        ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.strokeStyle = `rgba(0, 240, 255, ${0.06 * (1 - dist / 120)})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+    }
+  }
+}
+
+function animateParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => { p.update(); p.draw(); });
+  drawConnections();
+  requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+// ========== SCREEN MANAGEMENT ==========
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ========== SPLASH SCREEN ==========
+let loadProgress = 0;
+const loadInterval = setInterval(() => {
+  loadProgress += Math.random() * 15 + 5;
+  if (loadProgress >= 100) {
+    loadProgress = 100;
+    clearInterval(loadInterval);
+    setTimeout(() => {
+      showScreen('loginScreen');
+      document.getElementById('playerName').focus();
+    }, 500);
+  }
+  document.getElementById('loadingBar').style.width = loadProgress + '%';
+}, 200);
+
+// ========== LOGIN ==========
+document.getElementById('loginBtn').addEventListener('click', attemptLogin);
+document.getElementById('playerName').addEventListener('keydown', e => {
+  if (e.key === 'Enter') attemptLogin();
+});
+
+function attemptLogin() {
+  const name = document.getElementById('playerName').value.trim();
+  if (!name) {
+    showToast('请输入你的代号');
+    document.getElementById('playerName').focus();
+    return;
+  }
+  GS.playerName = name;
+  showToast('身份验证通过，正在连接T-COM网络...');
+  setTimeout(() => showScreen('charSelectScreen'), 1200);
+}
+
+// ========== CHARACTER SELECT ==========
+function selectChar(type) {
+  GS.selectedChar = type;
+  document.getElementById('charCardA').className = 'char-card' + (type === 'A' ? ' selected-a' : '');
+  document.getElementById('charCardB').className = 'char-card' + (type === 'B' ? ' selected-b' : '');
+  document.getElementById('charConfirmBtn').disabled = false;
+}
+
+function confirmChar() {
+  if (!GS.selectedChar) return;
+  GS.currentChar = GS.selectedChar;
+  showToast(`正在建立与${GS.selectedChar === 'A' ? 'LUMINA' : 'NOVA'}的时空连接...`);
+  setTimeout(() => {
+    showScreen('gameScreen');
+    initGame();
+  }, 1500);
+}
+
+// ========== GAME INIT ==========
+function initGame() {
+  GS.callStartTime = Date.now();
+  applyCharacterTheme();
+  updateRelPanel();
+  updateMemoryPanel();
+  startClock();
+  startPingSim();
+
+  // Initial greeting
+  setTimeout(() => {
+    const responses = AI_RESPONSES[GS.currentChar].greetings;
+    const greeting = responses[Math.floor(Math.random() * responses.length)];
+    addAIMessage(greeting);
+    addMemory('系统', '时空通讯连接已建立');
+  }, 1000);
+
+  // Input handling
+  document.getElementById('chatInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  // Idle trigger
+  let idleTimer;
+  const resetIdle = () => {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+      if (!GS.aiProcessing && GS.messageCount > 0) {
+        const idle = AI_RESPONSES[GS.currentChar].idle;
+        addAIMessage(idle[Math.floor(Math.random() * idle.length)]);
+      }
+    }, 45000);
+  };
+  document.getElementById('chatInput').addEventListener('input', resetIdle);
+  resetIdle();
+
+  // Eye tracking simulation
+  simulateEyeTracking();
+}
+
+function applyCharacterTheme() {
+  const isA = GS.currentChar === 'A';
+  const head = document.getElementById('avatarHead');
+  const eyeL = document.getElementById('eyeL');
+  const eyeR = document.getElementById('eyeR');
+  const mouth = document.getElementById('avatarMouth');
+  const torso = document.getElementById('avatarTorso');
+  const glow = document.getElementById('avatarGlow');
+
+  head.className = 'avatar-head ' + (isA ? 'avatar-head-a' : 'avatar-head-b');
+  eyeL.className = 'avatar-eye ' + (isA ? 'avatar-eye-a' : 'avatar-eye-b');
+  eyeR.className = 'avatar-eye ' + (isA ? 'avatar-eye-a' : 'avatar-eye-b');
+  mouth.className = 'avatar-mouth ' + (isA ? 'avatar-mouth-a' : 'avatar-mouth-b');
+  torso.className = 'avatar-torso ' + (isA ? 'avatar-torso-a' : 'avatar-torso-b');
+  glow.className = 'avatar-glow ' + (isA ? 'avatar-glow-a' : 'avatar-glow-b');
+
+  document.getElementById('videoLabel').textContent =
+    `T-COM // ${isA ? 'LUMINA' : 'NOVA'} // ENCRYPTED`;
+}
+
+// ========== CLOCK & PING ==========
+function startClock() {
+  const update = () => {
+    const now = new Date();
+    const y = 2077;
+    const mo = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    const h = String(now.getHours()).padStart(2, '0');
+    const mi = String(now.getMinutes()).padStart(2, '0');
+    const s = String(now.getSeconds()).padStart(2, '0');
+    document.getElementById('gameTime').textContent = `${y}.${mo}.${d} // ${h}:${mi}:${s}`;
+
+    if (GS.callStartTime) {
+      const elapsed = Math.floor((Date.now() - GS.callStartTime) / 1000);
+      const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
+      const ss = String(elapsed % 60).padStart(2, '0');
+      document.getElementById('videoTimestamp').textContent = `${mm}:${ss}`;
+    }
+  };
+  update();
+  setInterval(update, 1000);
+}
+
+function startPingSim() {
+  setInterval(() => {
+    const ping = Math.floor(Math.random() * 80 + 80);
+    document.getElementById('pingDisplay').textContent = ping + 'ms';
+  }, 3000);
+}
+
+// ========== EYE TRACKING ==========
+function simulateEyeTracking() {
+  document.addEventListener('mousemove', e => {
+    const container = document.getElementById('avatarContainer');
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height * 0.35;
+    const dx = (e.clientX - cx) / window.innerWidth * 6;
+    const dy = (e.clientY - cy) / window.innerHeight * 4;
+    const eyes = document.querySelectorAll('.avatar-eye');
+    eyes.forEach(eye => {
+      eye.style.transform = `translate(${dx}px, ${dy}px)`;
+    });
+  });
+}
+
+// ========== CHAT SYSTEM ==========
+function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text || GS.aiProcessing) return;
+
+  addUserMessage(text);
+  input.value = '';
+  GS.messageCount++;
+  analyzeAndUpdateEmotions(text);
+
+  // Check for name mention
+  if (text.includes(GS.playerName) || text.includes('我叫') || text.includes('我是')) {
+    setTimeout(() => {
+      const nameResp = AI_RESPONSES[GS.currentChar].name;
+      addAIMessage(nameResp[Math.floor(Math.random() * nameResp.length)].replace('{name}', GS.playerName));
+      GS.emotions.trust = Math.min(100, GS.emotions.trust + 5);
+      updateEmotionDisplay();
+    }, 1500);
+    return;
+  }
+
+  // Generate AI response
+  generateAIResponse(text);
+}
+
+function addUserMessage(text) {
+  const container = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'chat-msg user';
+  div.textContent = text;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function addAIMessage(text) {
+  GS.aiProcessing = true;
+  const container = document.getElementById('chatMessages');
+
+  // Show typing indicator
+  const typing = document.createElement('div');
+  typing.className = 'chat-msg ai';
+  typing.innerHTML = '<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
+  container.appendChild(typing);
+  container.scrollTop = container.scrollHeight;
+
+  // Animate mouth
+  const mouth = document.getElementById('avatarMouth');
+  mouth.classList.add('speaking');
+
+  const delay = Math.min(2000, Math.max(800, text.length * 60));
+  setTimeout(() => {
+    container.removeChild(typing);
+    const div = document.createElement('div');
+    div.className = 'chat-msg ai';
+    div.textContent = text;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    mouth.classList.remove('speaking');
+    GS.aiProcessing = false;
+
+    // Save to memory
+    addMemory(GS.currentChar === 'A' ? 'LUMINA' : 'NOVA', text);
+
+    // Update relationship
+    updateRelationship();
+  }, delay);
+}
+
+function addSystemMessage(text) {
+  const container = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'chat-msg system';
+  div.textContent = text;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+// ========== AI RESPONSE GENERATION ==========
+function generateAIResponse(userText) {
+  const char = GS.currentChar;
+  const lower = userText.toLowerCase();
+  let category = 'neutral';
+  let maxScore = 0;
+
+  for (const [emo, keywords] of Object.entries(EMOTION_KEYWORDS)) {
+    let score = 0;
+    for (const kw of keywords) {
+      if (lower.includes(kw)) score++;
+    }
+    if (score > maxScore) {
+      maxScore = score;
+      category = emo;
+    }
+  }
+
+  const responses = AI_RESPONSES[char][category] || AI_RESPONSES[char].neutral;
+  const response = responses[Math.floor(Math.random() * responses.length)];
+
+  // Add emotion-based delay
+  const delay = category === 'question' ? 1800 : 1200;
+  setTimeout(() => addAIMessage(response), delay);
+
+  // Update emotion halo
+  updateEmotionHalo(category);
+}
+
+// ========== EMOTION SYSTEM ==========
+function analyzeAndUpdateEmotions(text) {
+  const lower = text.toLowerCase();
+
+  // Happy
+  for (const kw of EMOTION_KEYWORDS.happy) {
+    if (lower.includes(kw)) {
+      GS.emotions.happy = Math.min(100, GS.emotions.happy + 3);
+      break;
+    }
+  }
+
+  // Sad
+  for (const kw of EMOTION_KEYWORDS.sad) {
+    if (lower.includes(kw)) {
+      GS.emotions.happy = Math.max(0, GS.emotions.happy - 2);
+      GS.emotions.trust = Math.min(100, GS.emotions.trust + 2); // Sharing sadness builds trust
+      break;
+    }
+  }
+
+  // Trust
+  for (const kw of EMOTION_KEYWORDS.trust) {
+    if (lower.includes(kw)) {
+      GS.emotions.trust = Math.min(100, GS.emotions.trust + 5);
+      GS.emotions.intimacy = Math.min(100, GS.emotions.intimacy + 3);
+      break;
+    }
+  }
+
+  // Natural growth from interaction
+  GS.emotions.trust = Math.min(100, GS.emotions.trust + 0.5);
+  GS.emotions.intimacy = Math.min(100, GS.emotions.intimacy + 0.3);
+
+  updateEmotionDisplay();
+}
+
+function updateEmotionDisplay() {
+  const h = Math.round(GS.emotions.happy);
+  const t = Math.round(GS.emotions.trust);
+  const i = Math.round(GS.emotions.intimacy);
+
+  document.getElementById('edHappy').textContent = h + '%';
+  document.getElementById('edTrust').textContent = t + '%';
+  document.getElementById('edIntimacy').textContent = i + '%';
+  document.getElementById('edBarHappy').style.width = h + '%';
+  document.getElementById('edBarTrust').style.width = t + '%';
+  document.getElementById('edBarIntimacy').style.width = i + '%';
+
+  // Update glow color based on emotion
+  const glow = document.getElementById('avatarGlow');
+  if (GS.currentChar === 'A') {
+    if (h > 70) {
+      glow.style.background = 'radial-gradient(ellipse, rgba(255,200,100,0.4), transparent)';
+    } else if (h < 30) {
+      glow.style.background = 'radial-gradient(ellipse, rgba(255,100,100,0.3), transparent)';
+    } else {
+      glow.style.background = 'radial-gradient(ellipse, rgba(255,110,199,0.4), transparent)';
+    }
+  } else {
+    if (h > 70) {
+      glow.style.background = 'radial-gradient(ellipse, rgba(255,200,100,0.4), transparent)';
+    } else if (h < 30) {
+      glow.style.background = 'radial-gradient(ellipse, rgba(255,80,80,0.3), transparent)';
+    } else {
+      glow.style.background = 'radial-gradient(ellipse, rgba(74,158,255,0.4), transparent)';
+    }
+  }
+
+  // Save state
+  saveGameState();
+}
+
+function updateEmotionHalo(category) {
+  const halo = document.getElementById('emotionHalo');
+  halo.className = 'emotion-halo';
+  if (['happy'].includes(category)) halo.classList.add('happy');
+  else if (['sad', 'lonely'].includes(category)) halo.classList.add('sad');
+  else if (['sad'].includes(category) && GS.emotions.happy < 30) halo.classList.add('anxious');
+
+  setTimeout(() => { halo.className = 'emotion-halo'; }, 3000);
+}
+
+// ========== RELATIONSHIP SYSTEM ==========
+function updateRelationship() {
+  const avgEmotion = (GS.emotions.happy + GS.emotions.trust + GS.emotions.intimacy) / 3;
+  let newStage = 0;
+  for (let i = REL_STAGES.length - 1; i >= 0; i--) {
+    if (avgEmotion >= REL_STAGES[i].threshold) {
+      newStage = i;
+      break;
+    }
+  }
+
+  if (newStage > GS.relationshipStage) {
+    GS.relationshipStage = newStage;
+    addSystemMessage(`◈ 情感成长：${REL_STAGES[newStage].name} — ${REL_STAGES[newStage].desc}`);
+    showToast(`关系升级：${REL_STAGES[newStage].name}`);
+    document.getElementById('avatarContainer').classList.add('glitch');
+    setTimeout(() => document.getElementById('avatarContainer').classList.remove('glitch'), 300);
+  }
+
+  updateRelPanel();
+  saveGameState();
+}
+
+function updateRelPanel() {
+  const container = document.getElementById('relStage');
+  container.innerHTML = '';
+  REL_STAGES.forEach((stage, i) => {
+    const node = document.createElement('div');
+    node.className = 'rel-node';
+    const dotClass = i < GS.relationshipStage ? 'reached' : (i === GS.relationshipStage ? 'current' : '');
+    const nameClass = i <= GS.relationshipStage ? (i === GS.relationshipStage ? 'current' : 'reached') : '';
+    node.innerHTML = `
+      <div class="rel-dot ${dotClass}"></div>
+      ${i < REL_STAGES.length - 1 ? '<div class="rel-line"></div>' : ''}
+      <div class="rel-info">
+        <div class="rel-name ${nameClass}">${stage.name}</div>
+        <div class="rel-desc">${stage.desc}</div>
+      </div>
+    `;
+    container.appendChild(node);
+  });
+}
+
+// ========== MEMORY SYSTEM ==========
+function addMemory(source, text) {
+  const memory = {
+    source,
+    text: text.substring(0, 100),
+    time: new Date().toLocaleString('zh-CN'),
+    emotion: GS.emotions.happy > 60 ? '愉悦' : (GS.emotions.happy < 30 ? '低落' : '平静')
+  };
+  GS.memories.unshift(memory);
+  if (GS.memories.length > 50) GS.memories.pop();
+  updateMemoryPanel();
+  saveGameState();
+}
+
+function updateMemoryPanel() {
+  const container = document.getElementById('memoryList');
+  container.innerHTML = '';
+  if (GS.memories.length === 0) {
+    container.innerHTML = '<div style="color:rgba(255,255,255,0.2);font-size:12px;text-align:center;padding:20px;">暂无记忆碎片</div>';
+    return;
+  }
+  GS.memories.forEach(m => {
+    const frag = document.createElement('div');
+    frag.className = 'memory-fragment';
+    const emoColor = m.emotion === '愉悦' ? 'rgba(255,200,100,0.15);color:#ffd700' :
+                     m.emotion === '低落' ? 'rgba(100,150,255,0.15);color:#6496ff' :
+                     'rgba(0,240,255,0.1);color:var(--cyan)';
+    frag.innerHTML = `
+      <div class="memory-frag-time">${m.time} // ${m.source}</div>
+      <div class="memory-frag-text">${m.text}</div>
+      <span class="memory-frag-emotion" style="background:${emoColor}">${m.emotion}</span>
+    `;
+    container.appendChild(frag);
+  });
+}
+
+// ========== VOICE INPUT ==========
+function toggleVoice() {
+  const btn = document.getElementById('voiceBtn');
+
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    showToast('当前浏览器不支持语音识别');
+    return;
+  }
+
+  if (GS.isVoiceRecording) {
+    if (GS.recognition) GS.recognition.stop();
+    GS.isVoiceRecording = false;
+    btn.classList.remove('recording');
+    return;
+  }
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  GS.recognition = new SpeechRecognition();
+  GS.recognition.lang = 'zh-CN';
+  GS.recognition.continuous = false;
+  GS.recognition.interimResults = false;
+
+  GS.recognition.onstart = () => {
+    GS.isVoiceRecording = true;
+    btn.classList.add('recording');
+    showToast('正在聆听...');
+  };
+
+  GS.recognition.onresult = (e) => {
+    const text = e.results[0][0].transcript;
+    document.getElementById('chatInput').value = text;
+    sendMessage();
+  };
+
+  GS.recognition.onerror = (e) => {
+    showToast('语音识别出错：' + e.error);
+    GS.isVoiceRecording = false;
+    btn.classList.remove('recording');
+  };
+
+  GS.recognition.onend = () => {
+    GS.isVoiceRecording = false;
+    btn.classList.remove('recording');
+  };
+
+  GS.recognition.start();
+}
+
+// ========== PANELS ==========
+function toggleEmotionDash() {
+  GS.panels.emotion = !GS.panels.emotion;
+  document.getElementById('emotionDashboard').classList.toggle('show', GS.panels.emotion);
+  document.querySelectorAll('.ctrl-btn')[0].classList.toggle('active', GS.panels.emotion);
+}
+
+function toggleMemoryPanel() {
+  GS.panels.memory = !GS.panels.memory;
+  document.getElementById('memoryPanel').classList.toggle('show', GS.panels.memory);
+  document.querySelectorAll('.ctrl-btn')[1].classList.toggle('active', GS.panels.memory);
+}
+
+function toggleRelPanel() {
+  GS.panels.relation = !GS.panels.relation;
+  document.getElementById('relPanel').classList.toggle('show', GS.panels.relation);
+  document.querySelectorAll('.ctrl-btn')[2].classList.toggle('active', GS.panels.relation);
+}
+
+function switchCharacter() {
+  const newChar = GS.currentChar === 'A' ? 'B' : 'A';
+  GS.currentChar = newChar;
+  applyCharacterTheme();
+  showToast(`已切换至${newChar === 'A' ? 'LUMINA' : 'NOVA'}`);
+  addSystemMessage(`◈ 通讯频道切换：${newChar === 'A' ? 'LUMINA (TYPE-A)' : 'NOVA (TYPE-B)'}`);
+  setTimeout(() => {
+    const greetings = AI_RESPONSES[newChar].greetings;
+    addAIMessage(greetings[Math.floor(Math.random() * greetings.length)]);
+  }, 1000);
+}
+
+function endCall() {
+  const char = GS.currentChar;
+  const goodbyes = AI_RESPONSES[char].goodbye;
+  addAIMessage(goodbyes[Math.floor(Math.random() * goodbyes.length)]);
+
+  setTimeout(() => {
+    addSystemMessage('◈ 通讯连接已断开');
+    showToast('通话结束。记忆已保存。');
+    GS.callStartTime = null;
+    saveGameState();
+
+    setTimeout(() => {
+      showScreen('loginScreen');
+      document.getElementById('playerName').value = GS.playerName;
+    }, 2000);
+  }, 2500);
+}
+
+// ========== TOAST ==========
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// ========== PERSISTENCE ==========
+function saveGameState() {
+  try {
+    const data = {
+      playerName: GS.playerName,
+      selectedChar: GS.selectedChar,
+      emotions: GS.emotions,
+      relationshipStage: GS.relationshipStage,
+      memories: GS.memories.slice(0, 30),
+      messageCount: GS.messageCount,
+      savedAt: Date.now()
+    };
+    localStorage.setItem('echo2077_save', JSON.stringify(data));
+  } catch (e) { /* ignore */ }
+}
+
+function loadGameState() {
+  try {
+    const raw = localStorage.getItem('echo2077_save');
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (data.playerName) GS.playerName = data.playerName;
+    if (data.selectedChar) GS.selectedChar = data.selectedChar;
+    if (data.emotions) Object.assign(GS.emotions, data.emotions);
+    if (data.relationshipStage !== undefined) GS.relationshipStage = data.relationshipStage;
+    if (data.memories) GS.memories = data.memories;
+    if (data.messageCount) GS.messageCount = data.messageCount;
+    return true;
+  } catch (e) { return false; }
+}
+
+// Load save on startup
+const hasSave = loadGameState();
+if (hasSave && GS.playerName) {
+  document.getElementById('playerName').value = GS.playerName;
+}
+
+// ========== KEYBOARD SHORTCUTS ==========
+document.addEventListener('keydown', e => {
+  if (document.getElementById('gameScreen').classList.contains('active')) {
+    if (e.key === 'F1') { e.preventDefault(); toggleEmotionDash(); }
+    if (e.key === 'F2') { e.preventDefault(); toggleMemoryPanel(); }
+    if (e.key === 'F3') { e.preventDefault(); toggleRelPanel(); }
+    if (e.key === 'F4') { e.preventDefault(); switchCharacter(); }
+    if (e.key === 'F5') { e.preventDefault(); endCall(); }
+  }
+});
+
+// ========== RANDOM EVENTS ==========
+setInterval(() => {
+  if (!document.getElementById('gameScreen').classList.contains('active')) return;
+  if (GS.aiProcessing || GS.messageCount < 3) return;
+
+  const events = [
+    { msg: '◈ 检测到量子通讯波动...信号已自动修复', type: 'system' },
+    { msg: '◈ 时空陪伴署提醒：请保持良好的通讯习惯', type: 'system' },
+  ];
+
+  if (GS.relationshipStage >= 1) {
+    events.push({ msg: '◈ 记忆碎片同步完成', type: 'system' });
+  }
+  if (GS.relationshipStage >= 2) {
+    events.push({ msg: '◈ 情感分析模块已更新', type: 'system' });
+  }
+
+  if (Math.random() < 0.15) {
+    const event = events[Math.floor(Math.random() * events.length)];
+    addSystemMessage(event.msg);
+  }
+}, 30000);
+</script>
+</body>
+</html>
