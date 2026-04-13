@@ -296,6 +296,59 @@ input,select,textarea{font-family:var(--font)}
   .doc-content{padding:20px}
   .template-grid{grid-template-columns:1fr}
 }
+
+/* ===== Feature: Document Comparison ===== */
+.compare-mode .history-item{position:relative;padding-left:40px}
+.compare-mode .history-item::before{content:'';position:absolute;left:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;border:2px solid var(--border);border-radius:4px;background:var(--bg);transition:all .15s}
+.compare-mode .history-item.selected::before{background:var(--blue);border-color:var(--blue)}
+.compare-mode .history-item.selected::after{content:'✓';position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#fff;font-size:12px;font-weight:bold}
+.compare-actions{display:none;gap:8px;align-items:center}
+.compare-mode .compare-actions{display:flex}
+.compare-mode .clear-actions{display:none}
+
+.diff-view{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.diff-column{background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.diff-column-header{padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--border);font-weight:600;font-size:13px}
+.diff-column-content{padding:16px;max-height:400px;overflow-y:auto;font-size:13px;line-height:1.6;white-space:pre-wrap;font-family:var(--mono)}
+.diff-line{padding:2px 4px;margin:0 -4px}
+.diff-line.added{background:var(--green-bg);color:var(--green)}
+.diff-line.removed{background:var(--red-bg);color:var(--red);text-decoration:line-through}
+.diff-line.unchanged{color:var(--text-secondary)}
+
+/* ===== Feature: Batch Mode ===== */
+.mode-toggle{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.mode-toggle-label{font-size:13px;color:var(--text-secondary)}
+.mode-toggle-switch{position:relative;width:44px;height:22px;background:var(--border);border-radius:11px;cursor:pointer;transition:background .2s}
+.mode-toggle-switch.active{background:var(--blue)}
+.mode-toggle-switch::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 2px rgba(0,0,0,0.2)}
+.mode-toggle-switch.active::after{transform:translateX(22px)}
+.mode-toggle-text{font-size:13px;font-weight:500;color:var(--text)}
+
+.batch-progress{padding:12px 16px;background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:var(--radius);margin-bottom:16px;display:none}
+.batch-progress.show{display:block}
+.batch-progress-text{font-size:13px;color:var(--blue)}
+.batch-progress-bar{height:4px;background:var(--border);border-radius:2px;margin-top:8px;overflow:hidden}
+.batch-progress-fill{height:100%;background:var(--blue);transition:width .3s}
+
+.batch-results{margin-top:16px}
+.batch-results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.batch-results-title{font-size:15px;font-weight:600;color:var(--text)}
+.batch-results-count{font-size:13px;color:var(--text-secondary)}
+.batch-result-item{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:all .15s;margin-bottom:8px}
+.batch-result-item:hover{border-color:var(--blue);background:var(--blue-bg)}
+.batch-result-item-info{flex:1;min-width:0}
+.batch-result-item-title{font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.batch-result-item-meta{font-size:12px;color:var(--text-tertiary);margin-top:2px}
+
+/* ===== Feature: Extract Data ===== */
+.extract-modal .modal{max-width:640px}
+.extract-section{margin-bottom:20px}
+.extract-section:last-child{margin-bottom:0}
+.extract-section-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.extract-section-content{font-size:13px;color:var(--text-secondary)}
+.extract-list{list-style:none;padding:0;margin:0}
+.extract-list li{padding:6px 12px;background:var(--bg-secondary);border-radius:var(--radius);margin-bottom:4px;font-size:13px}
+.extract-empty{color:var(--text-tertiary);font-style:italic}
 </style>
 </head>
 <body>
@@ -339,6 +392,12 @@ input,select,textarea{font-family:var(--font)}
 
       <div class="form-group">
         <label class="form-label" data-i18n="game_idea">游戏创意 <span class="required">*</span></label>
+        <!-- Batch Mode Toggle -->
+        <div class="mode-toggle">
+          <span class="mode-toggle-label" data-i18n="single_mode">单个模式</span>
+          <div class="mode-toggle-switch" id="batchModeSwitch" onclick="toggleBatchMode()"></div>
+          <span class="mode-toggle-text" id="modeToggleText" data-i18n="batch_mode">批量模式</span>
+        </div>
         <textarea class="form-textarea" id="gameIdea" data-i18n-placeholder="idea_placeholder" placeholder="描述你的游戏创意。越详细越好——可以包含玩法、故事、美术风格、目标受众等任何想法。"></textarea>
         <div class="form-error" id="ideaError" data-i18n="idea_required">请输入游戏创意</div>
       </div>
@@ -381,7 +440,15 @@ input,select,textarea{font-family:var(--font)}
     <div id="historySection" class="card" style="display:none">
       <div class="card-header">
         <div class="card-title" data-i18n="history">历史记录</div>
-        <button class="btn btn-ghost btn-sm" onclick="clearHistory()" data-i18n="clear_all">清空</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="compare-actions">
+            <span id="compareCount" style="font-size:13px;color:var(--text-secondary)"></span>
+            <button class="btn btn-blue btn-sm" id="startCompareBtn" onclick="openCompareModal()" style="display:none" data-i18n="start_compare">开始对比</button>
+            <button class="btn btn-ghost btn-sm" onclick="exitCompareMode()" data-i18n="exit_compare">退出对比</button>
+          </div>
+          <button class="btn btn-ghost btn-sm clear-actions" onclick="enterCompareMode()" data-i18n="compare">对比</button>
+          <button class="btn btn-ghost btn-sm clear-actions" onclick="clearHistory()" data-i18n="clear_all">清空</button>
+        </div>
       </div>
       <div id="historyList"></div>
     </div>
@@ -401,6 +468,7 @@ input,select,textarea{font-family:var(--font)}
               </div>
               <div class="result-toolbar-right">
                 <button class="btn btn-ghost btn-sm" id="editToggleBtn" onclick="toggleEditMode()" data-i18n="edit">编辑</button>
+                <button class="btn btn-ghost btn-sm" onclick="extractProjectData()" data-i18n="extract_data">提取数据</button>
                 <button class="btn btn-ghost btn-icon" onclick="copyAll()" title="Copy">📋</button>
                 <button class="btn btn-ghost btn-icon" onclick="copySoloPrompt()" title="SOLO Prompt">🤖</button>
                 <button class="btn btn-ghost btn-icon" onclick="exportPDF()" title="PDF">📄</button>
@@ -546,6 +614,65 @@ input,select,textarea{font-family:var(--font)}
   </div>
 </div>
 
+<!-- Compare Modal -->
+<div class="modal-overlay" id="compareModal">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h2 data-i18n="compare_title">文档对比</h2>
+      <button class="btn btn-ghost btn-icon" onclick="closeCompareModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="diff-view" id="diffView">
+        <div class="diff-column">
+          <div class="diff-column-header" id="diffColumnA" data-i18n="doc_a">文档 A</div>
+          <div class="diff-column-content" id="diffContentA"></div>
+        </div>
+        <div class="diff-column">
+          <div class="diff-column-header" id="diffColumnB" data-i18n="doc_b">文档 B</div>
+          <div class="diff-column-content" id="diffContentB"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeCompareModal()" data-i18n="cancel">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- Extract Data Modal -->
+<div class="modal-overlay extract-modal" id="extractModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 data-i18n="extract_title">项目数据提取</h2>
+      <button class="btn btn-ghost btn-icon" onclick="closeExtractModal()">✕</button>
+    </div>
+    <div class="modal-body" id="extractModalBody">
+      <div class="extract-section">
+        <div class="extract-section-title" data-i18n="tech_stack">技术栈</div>
+        <div class="extract-section-content" id="extractTechStack">
+          <ul class="extract-list" id="extractTechList"></ul>
+        </div>
+      </div>
+      <div class="extract-section">
+        <div class="extract-section-title" data-i18n="team_needs">人员需求</div>
+        <div class="extract-section-content" id="extractTeamNeeds">
+          <ul class="extract-list" id="extractTeamList"></ul>
+        </div>
+      </div>
+      <div class="extract-section">
+        <div class="extract-section-title" data-i18n="milestones">里程碑</div>
+        <div class="extract-section-content" id="extractMilestones">
+          <ul class="extract-list" id="extractMilestoneList"></ul>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeExtractModal()" data-i18n="cancel">取消</button>
+      <button class="btn btn-primary" onclick="copyExtractedData()" data-i18n="copy_data">复制数据</button>
+    </div>
+  </div>
+</div>
+
 <!-- Footer -->
 <footer class="footer-bar" style="text-align:center;padding:24px;color:var(--text-tertiary);font-size:12px;border-top:1px solid var(--border)">
   <p>GameForge · 游戏企划工坊 &mdash; Designed by <strong style="color:var(--text-secondary)">白芨</strong></p>
@@ -668,6 +795,34 @@ const I18N = {
     toast_gen_complete: '生成完成',
     toast_gen_cancel: '已取消生成',
     toast_import_success: '文档已导入',
+    // Feature: Document Comparison
+    compare: '对比',
+    select_two: '请选择两份文档',
+    start_compare: '开始对比',
+    compare_title: '文档对比',
+    doc_a: '文档 A',
+    doc_b: '文档 B',
+    exit_compare: '退出对比',
+    // Feature: Batch Mode
+    batch_mode: '批量模式',
+    single_mode: '单个模式',
+    batch_placeholder: '每行一个游戏创意，或用空行分隔多个创意...',
+    batch_results: '批量生成结果',
+    export_all: '导出全部',
+    generated_count: '已生成 {n} 份文档',
+    generating_progress: '正在生成 {current}/{total}...',
+    batch_gen_complete: '批量生成完成',
+    // Feature: Extract Data
+    extract_data: '提取数据',
+    extract_title: '项目数据提取',
+    tech_stack: '技术栈',
+    team_needs: '人员需求',
+    milestones: '里程碑',
+    copy_data: '复制数据',
+    no_data_found: '未提取到数据',
+    extract_ing: '提取中...',
+    extract_success: '数据提取成功',
+    extract_fail: '提取失败',
   },
   en: {
     logo_sub: '/ Game Design Workshop',
@@ -766,6 +921,34 @@ const I18N = {
     toast_gen_complete: 'Generation complete',
     toast_gen_cancel: 'Generation cancelled',
     toast_import_success: 'Document imported',
+    // Feature: Document Comparison
+    compare: 'Compare',
+    select_two: 'Select 2 documents',
+    start_compare: 'Compare',
+    compare_title: 'Document Comparison',
+    doc_a: 'Document A',
+    doc_b: 'Document B',
+    exit_compare: 'Exit Compare',
+    // Feature: Batch Mode
+    batch_mode: 'Batch Mode',
+    single_mode: 'Single Mode',
+    batch_placeholder: 'One game idea per line, or separate with blank lines...',
+    batch_results: 'Batch Results',
+    export_all: 'Export All',
+    generated_count: '{n} documents generated',
+    generating_progress: 'Generating {current}/{total}...',
+    batch_gen_complete: 'Batch generation complete',
+    // Feature: Extract Data
+    extract_data: 'Extract Data',
+    extract_title: 'Project Data Extraction',
+    tech_stack: 'Tech Stack',
+    team_needs: 'Team Needs',
+    milestones: 'Milestones',
+    copy_data: 'Copy Data',
+    no_data_found: 'No data found',
+    extract_ing: 'Extracting...',
+    extract_success: 'Data extracted successfully',
+    extract_fail: 'Extraction failed',
   }
 };
 
@@ -805,6 +988,17 @@ let isEditMode = false;
 let abortController = null;
 let activePromptPreset = 'default';
 let sectionBoundaries = [];
+
+// Feature: Batch Mode
+let isBatchMode = false;
+let batchResults = [];
+
+// Feature: Compare Mode
+let isCompareMode = false;
+let compareSelectedIds = [];
+
+// Feature: Extract Data
+let extractedData = { techStack: [], teamNeeds: [], milestones: [] };
 
 /* ============================================
    Theme
@@ -1388,72 +1582,6 @@ function importDocument() {
 }
 
 /* ============================================
-   Generate Document
-   ============================================ */
-async function generateDocument() {
-  if (isGenerating) return;
-  const idea = document.getElementById('gameIdea').value.trim();
-  if (!idea) { document.getElementById('ideaError').classList.add('show'); return; }
-  document.getElementById('ideaError').classList.remove('show');
-
-  const genre = document.getElementById('gameGenre');
-  const players = document.getElementById('targetPlayers');
-  const cycle = document.getElementById('devCycle');
-  const genreText = genre.selectedOptions[0].text;
-  const playersText = players.selectedOptions[0].text;
-  const cycleText = cycle.selectedOptions[0].text;
-
-  isGenerating = true;
-  abortController = new AbortController();
-  const btn = document.getElementById('generateBtn');
-  btn.disabled = true;
-  btn.textContent = t('generating');
-
-  document.getElementById('resultSection').classList.add('show');
-  document.getElementById('docContent').innerHTML = '';
-  document.getElementById('resultBadge').style.display = 'none';
-  document.getElementById('streamingBadge').style.display = 'inline-flex';
-  document.getElementById('tocList').innerHTML = '';
-  document.getElementById('followupSection').style.display = 'none';
-  exitEditMode();
-  document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-  const customPrompt = document.getElementById('customPromptEditor').value.trim();
-  const systemPrompt = customPrompt || buildDefaultSystemPrompt(genreText, playersText, cycleText);
-  const userPrompt = buildUserPrompt(idea, genreText, playersText, cycleText);
-
-  try {
-    let fullText = '';
-    if (config.provider === 'openai') {
-      fullText = await streamOpenAI(systemPrompt, userPrompt);
-    } else {
-      fullText = await streamClaude(systemPrompt, userPrompt);
-    }
-    currentDocument = fullText;
-    renderMarkdown(fullText);
-    extractTOC();
-    document.getElementById('streamingBadge').style.display = 'none';
-    document.getElementById('resultBadge').style.display = 'inline-flex';
-    document.getElementById('followupSection').style.display = 'block';
-    saveToHistory(idea, genreText, playersText, cycleText, fullText);
-    showToast(t('toast_gen_complete'), 'success');
-  } catch(e) {
-    if (e.name === 'AbortError') {
-      showToast(t('toast_gen_cancel'), 'info');
-    } else {
-      showToast(t('gen_fail') + ': ' + e.message, 'error');
-      document.getElementById('docContent').innerHTML = '<p style="color:var(--red)">' + escapeHtml(e.message) + '</p>';
-    }
-    document.getElementById('streamingBadge').style.display = 'none';
-  } finally {
-    isGenerating = false;
-    btn.disabled = false;
-    btn.textContent = t('generate');
-    abortController = null;
-  }
-}
-
-/* ============================================
    Prompt Building
    ============================================ */
 function buildDefaultSystemPrompt(genre, players, cycle) {
@@ -2006,7 +2134,7 @@ function renderHistory() {
   if (!window._history || window._history.length === 0) { section.style.display = 'none'; return; }
   section.style.display = 'block';
   list.innerHTML = window._history.map(item => `
-    <div class="history-item" onclick="loadHistoryItem(${item.id})">
+    <div class="history-item${isCompareMode && compareSelectedIds.includes(item.id) ? ' selected' : ''}" data-id="${item.id}" onclick="${isCompareMode ? 'toggleCompareItem(' + item.id + ')' : 'loadHistoryItem(' + item.id + ')'}">
       <div class="history-item-info">
         <div class="history-item-title">${escapeHtml(item.idea)}</div>
         <div class="history-item-meta">${item.genre} · ${item.date}</div>
@@ -2067,7 +2195,7 @@ function showToast(message, type = 'info') {
    Keyboard shortcut
    ============================================ */
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeConfigModal(); closeTemplateModal(); closeImportModal(); }
+  if (e.key === 'Escape') { closeConfigModal(); closeTemplateModal(); closeImportModal(); closeCompareModal(); closeExtractModal(); }
   if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && !isGenerating) generateDocument();
   if ((e.metaKey || e.ctrlKey) && e.key === 's' && isEditMode) { e.preventDefault(); exitEditMode(); }
 });
@@ -2078,6 +2206,533 @@ document.addEventListener('input', e => {
     try { localStorage.setItem('gameforge_custom_prompt', e.target.value); } catch(err) {}
   }
 });
+
+/* ============================================
+   Feature: Document Comparison
+   ============================================ */
+function enterCompareMode() {
+  isCompareMode = true;
+  compareSelectedIds = [];
+  document.getElementById('historySection').classList.add('compare-mode');
+  updateCompareUI();
+}
+
+function exitCompareMode() {
+  isCompareMode = false;
+  compareSelectedIds = [];
+  document.getElementById('historySection').classList.remove('compare-mode');
+  updateCompareUI();
+}
+
+function toggleCompareItem(id) {
+  if (!isCompareMode) return;
+  const idx = compareSelectedIds.indexOf(id);
+  if (idx > -1) {
+    compareSelectedIds.splice(idx, 1);
+  } else if (compareSelectedIds.length < 2) {
+    compareSelectedIds.push(id);
+  }
+  updateCompareUI();
+}
+
+function updateCompareUI() {
+  const items = document.querySelectorAll('.history-item');
+  items.forEach(item => {
+    const id = parseInt(item.dataset.id);
+    item.classList.toggle('selected', compareSelectedIds.includes(id));
+  });
+  
+  const count = compareSelectedIds.length;
+  const countEl = document.getElementById('compareCount');
+  const startBtn = document.getElementById('startCompareBtn');
+  
+  if (count === 0) {
+    countEl.textContent = t('select_two');
+    startBtn.style.display = 'none';
+  } else if (count === 1) {
+    countEl.textContent = t('select_two');
+    startBtn.style.display = 'none';
+  } else {
+    countEl.textContent = '';
+    startBtn.style.display = 'inline-flex';
+  }
+}
+
+function openCompareModal() {
+  if (compareSelectedIds.length !== 2) return;
+  
+  const itemA = window._history?.find(h => h.id === compareSelectedIds[0]);
+  const itemB = window._history?.find(h => h.id === compareSelectedIds[1]);
+  
+  if (!itemA || !itemB) return;
+  
+  document.getElementById('diffColumnA').textContent = itemA.idea + ' (' + itemA.date + ')';
+  document.getElementById('diffColumnB').textContent = itemB.idea + ' (' + itemB.date + ')';
+  
+  const diff = computeDiff(itemA.doc, itemB.doc);
+  document.getElementById('diffContentA').innerHTML = renderDiffLines(diff.a);
+  document.getElementById('diffContentB').innerHTML = renderDiffLines(diff.b);
+  
+  document.getElementById('compareModal').classList.add('show');
+}
+
+function closeCompareModal() {
+  document.getElementById('compareModal').classList.remove('show');
+}
+
+function computeDiff(textA, textB) {
+  const linesA = textA.split('\n');
+  const linesB = textB.split('\n');
+  
+  // Simple LCS-based diff
+  const lcs = computeLCS(linesA, linesB);
+  
+  const resultA = [];
+  const resultB = [];
+  
+  let i = 0, j = 0, k = 0;
+  
+  while (i < linesA.length || j < linesB.length) {
+    if (k < lcs.length && i < linesA.length && j < linesB.length && linesA[i] === lcs[k] && linesB[j] === lcs[k]) {
+      resultA.push({ text: linesA[i], type: 'unchanged' });
+      resultB.push({ text: linesB[j], type: 'unchanged' });
+      i++; j++; k++;
+    } else if (i < linesA.length && (k >= lcs.length || linesA[i] !== lcs[k])) {
+      resultA.push({ text: linesA[i], type: 'removed' });
+      i++;
+    } else if (j < linesB.length && (k >= lcs.length || linesB[j] !== lcs[k])) {
+      resultB.push({ text: linesB[j], type: 'added' });
+      j++;
+    } else {
+      if (i < linesA.length) {
+        resultA.push({ text: linesA[i], type: 'removed' });
+        i++;
+      }
+      if (j < linesB.length) {
+        resultB.push({ text: linesB[j], type: 'added' });
+        j++;
+      }
+    }
+  }
+  
+  return { a: resultA, b: resultB };
+}
+
+function computeLCS(arrA, arrB) {
+  const m = arrA.length;
+  const n = arrB.length;
+  const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+  
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (arrA[i - 1] === arrB[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1] + 1;
+      } else {
+        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+      }
+    }
+  }
+  
+  // Backtrack to find LCS
+  const lcs = [];
+  let i = m, j = n;
+  while (i > 0 && j > 0) {
+    if (arrA[i - 1] === arrB[j - 1]) {
+      lcs.unshift(arrA[i - 1]);
+      i--; j--;
+    } else if (dp[i - 1][j] > dp[i][j - 1]) {
+      i--;
+    } else {
+      j--;
+    }
+  }
+  
+  return lcs;
+}
+
+function renderDiffLines(lines) {
+  return lines.map(line => {
+    const cls = line.type === 'unchanged' ? 'unchanged' : line.type;
+    const text = escapeHtml(line.text) || '&nbsp;';
+    return '<div class="diff-line ' + cls + '">' + text + '</div>';
+  }).join('');
+}
+
+/* ============================================
+   Feature: Batch Mode
+   ============================================ */
+function toggleBatchMode() {
+  isBatchMode = !isBatchMode;
+  const switchEl = document.getElementById('batchModeSwitch');
+  const textarea = document.getElementById('gameIdea');
+  
+  switchEl.classList.toggle('active', isBatchMode);
+  
+  if (isBatchMode) {
+    textarea.placeholder = t('batch_placeholder');
+  } else {
+    textarea.placeholder = currentLang === 'zh' 
+      ? '描述你的游戏创意。越详细越好——可以包含玩法、故事、美术风格、目标受众等任何想法。'
+      : 'Describe your game idea. The more detail the better — gameplay, story, art style, target audience, etc.';
+  }
+}
+
+async function generateDocument() {
+  if (isGenerating) return;
+  
+  const idea = document.getElementById('gameIdea').value.trim();
+  if (!idea) { document.getElementById('ideaError').classList.add('show'); return; }
+  document.getElementById('ideaError').classList.remove('show');
+
+  if (isBatchMode) {
+    await generateBatch(idea);
+    return;
+  }
+
+  const genre = document.getElementById('gameGenre');
+  const players = document.getElementById('targetPlayers');
+  const cycle = document.getElementById('devCycle');
+  const genreText = genre.selectedOptions[0].text;
+  const playersText = players.selectedOptions[0].text;
+  const cycleText = cycle.selectedOptions[0].text;
+
+  isGenerating = true;
+  abortController = new AbortController();
+  const btn = document.getElementById('generateBtn');
+  btn.disabled = true;
+  btn.textContent = t('generating');
+
+  document.getElementById('resultSection').classList.add('show');
+  document.getElementById('docContent').innerHTML = '';
+  document.getElementById('resultBadge').style.display = 'none';
+  document.getElementById('streamingBadge').style.display = 'inline-flex';
+  document.getElementById('tocList').innerHTML = '';
+  document.getElementById('followupSection').style.display = 'none';
+  exitEditMode();
+  document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  const customPrompt = document.getElementById('customPromptEditor').value.trim();
+  const systemPrompt = customPrompt || buildDefaultSystemPrompt(genreText, playersText, cycleText);
+  const userPrompt = buildUserPrompt(idea, genreText, playersText, cycleText);
+
+  try {
+    let fullText = '';
+    if (config.provider === 'openai') {
+      fullText = await streamOpenAI(systemPrompt, userPrompt);
+    } else {
+      fullText = await streamClaude(systemPrompt, userPrompt);
+    }
+    currentDocument = fullText;
+    renderMarkdown(fullText);
+    extractTOC();
+    document.getElementById('streamingBadge').style.display = 'none';
+    document.getElementById('resultBadge').style.display = 'inline-flex';
+    document.getElementById('followupSection').style.display = 'block';
+    saveToHistory(idea, genreText, playersText, cycleText, fullText);
+    showToast(t('toast_gen_complete'), 'success');
+  } catch(e) {
+    if (e.name === 'AbortError') {
+      showToast(t('toast_gen_cancel'), 'info');
+    } else {
+      showToast(t('gen_fail') + ': ' + e.message, 'error');
+      document.getElementById('docContent').innerHTML = '<p style="color:var(--red)">' + escapeHtml(e.message) + '</p>';
+    }
+    document.getElementById('streamingBadge').style.display = 'none';
+  } finally {
+    isGenerating = false;
+    btn.disabled = false;
+    btn.textContent = t('generate');
+    abortController = null;
+  }
+}
+
+async function generateBatch(ideaText) {
+  // Split by double newlines or numbered list pattern
+  const ideas = ideaText.split(/\n\n+/).filter(s => s.trim());
+  if (ideas.length === 0) {
+    showToast(t('idea_required'), 'error');
+    return;
+  }
+
+  batchResults = [];
+  const btn = document.getElementById('generateBtn');
+  btn.disabled = true;
+  
+  const genre = document.getElementById('gameGenre');
+  const players = document.getElementById('targetPlayers');
+  const cycle = document.getElementById('devCycle');
+  const genreText = genre.selectedOptions[0].text;
+  const playersText = players.selectedOptions[0].text;
+  const cycleText = cycle.selectedOptions[0].text;
+
+  // Show batch progress
+  document.getElementById('resultSection').classList.add('show');
+  document.getElementById('docContent').innerHTML = '<div class="batch-progress show"><div class="batch-progress-text" id="batchProgressText">' + t('generating_progress').replace('{current}', '0').replace('{total}', ideas.length) + '</div><div class="batch-progress-bar"><div class="batch-progress-fill" id="batchProgressFill" style="width:0%"></div></div></div>';
+  document.getElementById('resultBadge').style.display = 'none';
+  document.getElementById('streamingBadge').style.display = 'inline-flex';
+  document.getElementById('tocList').innerHTML = '';
+  document.getElementById('followupSection').style.display = 'none';
+  exitEditMode();
+  document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  const customPrompt = document.getElementById('customPromptEditor').value.trim();
+
+  for (let i = 0; i < ideas.length; i++) {
+    if (!isGenerating) {
+      isGenerating = true;
+      abortController = new AbortController();
+    }
+
+    const idea = ideas[i].trim();
+    const progressText = t('generating_progress').replace('{current}', i + 1).replace('{total}', ideas.length);
+    document.getElementById('batchProgressText').textContent = progressText;
+    document.getElementById('batchProgressFill').style.width = ((i + 1) / ideas.length * 100) + '%';
+
+    const systemPrompt = customPrompt || buildDefaultSystemPrompt(genreText, playersText, cycleText);
+    const userPrompt = buildUserPrompt(idea, genreText, playersText, cycleText);
+
+    try {
+      let fullText = '';
+      if (config.provider === 'openai') {
+        fullText = await streamOpenAIForBatch(systemPrompt, userPrompt);
+      } else {
+        fullText = await streamClaudeForBatch(systemPrompt, userPrompt);
+      }
+      batchResults.push({
+        id: Date.now() + i,
+        idea: idea.substring(0, 60),
+        doc: fullText,
+        date: new Date().toLocaleDateString(currentLang === 'zh' ? 'zh-CN' : 'en-US')
+      });
+    } catch(e) {
+      if (e.name === 'AbortError') {
+        showToast(t('toast_gen_cancel'), 'info');
+        break;
+      } else {
+        batchResults.push({
+          id: Date.now() + i,
+          idea: idea.substring(0, 60),
+          doc: 'Error: ' + e.message,
+          date: new Date().toLocaleDateString(currentLang === 'zh' ? 'zh-CN' : 'en-US'),
+          error: true
+        });
+      }
+    }
+  }
+
+  // Show batch results
+  document.getElementById('streamingBadge').style.display = 'none';
+  document.getElementById('resultBadge').style.display = 'inline-flex';
+  renderBatchResults();
+  showToast(t('batch_gen_complete'), 'success');
+  
+  isGenerating = false;
+  btn.disabled = false;
+  btn.textContent = t('generate');
+  abortController = null;
+}
+
+async function streamOpenAIForBatch(systemPrompt, userPrompt) {
+  const baseUrl = (config.openai.baseUrl || '').replace(/\/+$/, '');
+  if (!baseUrl) throw new Error(t('no_api_url'));
+  const res = await fetch(baseUrl + '/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + config.openai.apiKey },
+    body: JSON.stringify({
+      model: config.openai.model || 'gpt-4o-mini',
+      messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
+      stream: false,
+      temperature: 0.7
+    }),
+    signal: abortController.signal
+  });
+  if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error?.message || 'HTTP ' + res.status); }
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || '';
+}
+
+async function streamClaudeForBatch(systemPrompt, userPrompt) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': config.claude.apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+    body: JSON.stringify({
+      model: config.claude.model || 'claude-sonnet-4-20250514',
+      max_tokens: 8192,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userPrompt }],
+      stream: false
+    }),
+    signal: abortController.signal
+  });
+  if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error?.message || 'HTTP ' + res.status); }
+  const data = await res.json();
+  return data.content?.[0]?.text || '';
+}
+
+function renderBatchResults() {
+  const count = batchResults.length;
+  const html = `
+    <div class="batch-results">
+      <div class="batch-results-header">
+        <div class="batch-results-title" data-i18n="batch_results">${t('batch_results')}</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="batch-results-count">${t('generated_count').replace('{n}', count)}</span>
+          <button class="btn btn-secondary btn-sm" onclick="exportAllBatch()">${t('export_all')}</button>
+        </div>
+      </div>
+      ${batchResults.map(item => `
+        <div class="batch-result-item ${item.error ? 'error' : ''}" onclick="loadBatchResult('${item.id}')">
+          <div class="batch-result-item-info">
+            <div class="batch-result-item-title">${escapeHtml(item.idea)}</div>
+            <div class="batch-result-item-meta">${item.date}${item.error ? ' · Error' : ''}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  document.getElementById('docContent').innerHTML = html;
+}
+
+function loadBatchResult(id) {
+  const item = batchResults.find(r => r.id == id);
+  if (!item) return;
+  currentDocument = item.doc;
+  renderMarkdown(item.doc);
+  extractTOC();
+  document.getElementById('followupSection').style.display = 'block';
+}
+
+function exportAllBatch() {
+  batchResults.forEach((item, index) => {
+    const blob = new Blob([item.doc], { type: 'text/markdown;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    const prefix = currentLang === 'zh' ? '游戏设计文档' : 'GDD';
+    a.download = prefix + '_' + (index + 1) + '_' + new Date().toISOString().slice(0,10) + '.md';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+  showToast(t('toast_downloaded'), 'success');
+}
+
+/* ============================================
+   Feature: Extract Data
+   ============================================ */
+async function extractProjectData() {
+  if (!currentDocument) {
+    showToast(currentLang === 'zh' ? '请先生成或导入文档' : 'Please generate or import a document first', 'error');
+    return;
+  }
+  
+  const extractBtn = document.querySelector('[onclick="extractProjectData()"]');
+  if (extractBtn) {
+    extractBtn.disabled = true;
+    extractBtn.textContent = t('extract_ing');
+  }
+  
+  const systemPrompt = currentLang === 'zh'
+    ? '从以下游戏设计文档中提取关键项目信息，以JSON格式返回：{"techStack":[...],"teamNeeds":[...],"milestones":[...]}。只返回JSON，不要其他内容。如果没有找到相关信息，对应字段返回空数组。'
+    : 'Extract key project info from this GDD as JSON: {"techStack":[...],"teamNeeds":[...],"milestones":[...]}. Return only JSON, no other content. If no info found, return empty array for that field.';
+  
+  const userPrompt = currentDocument;
+  
+  try {
+    let resultText = '';
+    if (config.provider === 'openai') {
+      resultText = await callOpenAIForExtract(systemPrompt, userPrompt);
+    } else {
+      resultText = await callClaudeForExtract(systemPrompt, userPrompt);
+    }
+    
+    // Parse JSON
+    const jsonMatch = resultText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      extractedData = JSON.parse(jsonMatch[0]);
+    } else {
+      extractedData = { techStack: [], teamNeeds: [], milestones: [] };
+    }
+    
+    renderExtractedData();
+    document.getElementById('extractModal').classList.add('show');
+    showToast(t('extract_success'), 'success');
+  } catch(e) {
+    showToast(t('extract_fail') + ': ' + e.message, 'error');
+  } finally {
+    if (extractBtn) {
+      extractBtn.disabled = false;
+      extractBtn.textContent = t('extract_data');
+    }
+  }
+}
+
+async function callOpenAIForExtract(systemPrompt, userPrompt) {
+  const baseUrl = (config.openai.baseUrl || '').replace(/\/+$/, '');
+  if (!baseUrl) throw new Error(t('no_api_url'));
+  const res = await fetch(baseUrl + '/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + config.openai.apiKey },
+    body: JSON.stringify({
+      model: config.openai.model || 'gpt-4o-mini',
+      messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
+      stream: false,
+      temperature: 0.3
+    })
+  });
+  if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error?.message || 'HTTP ' + res.status); }
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || '';
+}
+
+async function callClaudeForExtract(systemPrompt, userPrompt) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': config.claude.apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+    body: JSON.stringify({
+      model: config.claude.model || 'claude-sonnet-4-20250514',
+      max_tokens: 2048,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userPrompt }],
+      stream: false
+    })
+  });
+  if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error?.message || 'HTTP ' + res.status); }
+  const data = await res.json();
+  return data.content?.[0]?.text || '';
+}
+
+function renderExtractedData() {
+  const techList = document.getElementById('extractTechList');
+  const teamList = document.getElementById('extractTeamList');
+  const milestoneList = document.getElementById('extractMilestoneList');
+  
+  techList.innerHTML = extractedData.techStack?.length 
+    ? extractedData.techStack.map(item => '<li>' + escapeHtml(item) + '</li>').join('')
+    : '<li class="extract-empty">' + t('no_data_found') + '</li>';
+  
+  teamList.innerHTML = extractedData.teamNeeds?.length 
+    ? extractedData.teamNeeds.map(item => '<li>' + escapeHtml(item) + '</li>').join('')
+    : '<li class="extract-empty">' + t('no_data_found') + '</li>';
+  
+  milestoneList.innerHTML = extractedData.milestones?.length 
+    ? extractedData.milestones.map(item => '<li>' + escapeHtml(item) + '</li>').join('')
+    : '<li class="extract-empty">' + t('no_data_found') + '</li>';
+}
+
+function closeExtractModal() {
+  document.getElementById('extractModal').classList.remove('show');
+}
+
+async function copyExtractedData() {
+  const text = `=== ${t('tech_stack')} ===\n${extractedData.techStack?.join('\n') || t('no_data_found')}\n\n=== ${t('team_needs')} ===\n${extractedData.teamNeeds?.join('\n') || t('no_data_found')}\n\n=== ${t('milestones')} ===\n${extractedData.milestones?.join('\n') || t('no_data_found')}`;
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast(t('toast_copied'), 'success');
+  } catch(e) {
+    fallbackCopy(text);
+    showToast(t('toast_copied'), 'success');
+  }
+}
+
 </script>
 </body>
 </html>
