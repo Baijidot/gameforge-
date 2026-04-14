@@ -5,9 +5,9 @@
     支持 OpenAI / Claude 及兼容接口 · 单文件 · 零依赖
   </p>
   <p align="center">
-    <a href="https://github.com/Baijidot/gameforge/releases"><img src="https://img.shields.io/github/downloads/Baijidot/gameforge/total?style=flat-square&color=blueviolet" alt="Downloads"></a>
-    <a href="https://github.com/Baijidot/gameforge/releases/latest"><img src="https://img.shields.io/github/downloads/Baijidot/gameforge/latest/total?style=flat-square&color=green" alt="Latest Downloads"></a>
-    <a href="https://github.com/Baijidot/gameforge/releases"><img src="https://img.shields.io/github/v/release/Baijidot/gameforge?style=flat-square&color=orange" alt="Version"></a>
+    <a href="https://github.com/Baijidot/gameforge-/releases"><img src="https://img.shields.io/github/downloads/Baijidot/gameforge-/total?style=flat-square&color=blueviolet" alt="Downloads"></a>
+    <a href="https://github.com/Baijidot/gameforge-/releases/latest"><img src="https://img.shields.io/github/downloads/Baijidot/gameforge-/latest/total?style=flat-square&color=green" alt="Latest Downloads"></a>
+    <a href="https://github.com/Baijidot/gameforge-/releases"><img src="https://img.shields.io/github/v/release/Baijidot/gameforge-?style=flat-square&color=orange" alt="Version"></a>
     <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License">
     <img src="https://img.shields.io/badge/HTML-单文件应用-orange?style=flat-square" alt="Single File">
     <img src="https://img.shields.io/badge/支持-中%2F英-blue?style=flat-square" alt="i18n">
@@ -71,7 +71,7 @@
 
 ## 🚀 快速开始
 
-1. 下载 [gameforge.html](https://github.com/Baijidot/gameforge/releases)
+1. 下载 [gameforge.html](https://github.com/Baijidot/gameforge-/releases)
 2. 用浏览器打开
 3. 点击右上角 **⚙ 设置**，配置 API
 4. 输入游戏创意 → 点击 **生成企划**
@@ -172,7 +172,7 @@
 
 ## 📦 下载
 
-前往 [Releases](https://github.com/Baijidot/gameforge/releases) 下载最新版。
+前往 [Releases](https://github.com/Baijidot/gameforge-/releases) 下载最新版。
 
 只需一个 `gameforge.html` 文件，浏览器打开即用。
 
