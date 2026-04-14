@@ -182,6 +182,42 @@ input,select,textarea{font-family:var(--font)}
 /* Streaming */
 .streaming-cursor::after{content:'▊';animation:blink 1s step-end infinite;color:var(--text-tertiary)}
 @keyframes blink{50%{opacity:0}}
+.loading-spinner{width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Competitor Research */
+.comp-research-result{background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-top:12px;max-height:50vh;overflow-y:auto;font-size:13px;line-height:1.8}
+.comp-research-result h3{font-size:14px;font-weight:600;color:var(--text);margin:16px 0 8px}
+.comp-research-result h3:first-child{margin-top:0}
+.comp-research-result p{color:var(--text-secondary);margin-bottom:8px}
+.comp-research-result strong{color:var(--text)}
+.comp-research-result ul{color:var(--text-secondary);padding-left:20px;margin-bottom:8px}
+.comp-research-result li{margin-bottom:4px}
+.comp-research-result table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}
+.comp-research-result th,.comp-research-result td{padding:6px 10px;text-align:left;border:1px solid var(--border)}
+.comp-research-result th{background:var(--bg);font-weight:600;color:var(--text);font-size:11px;text-transform:uppercase;letter-spacing:.3px}
+.comp-research-result td{color:var(--text-secondary)}
+.comp-research-result blockquote{border-left:3px solid var(--border);padding-left:12px;color:var(--text-tertiary);margin:8px 0;font-style:italic}
+.comp-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.comp-tag{padding:3px 10px;border-radius:100px;font-size:11px;background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);cursor:pointer;transition:all .15s;user-select:none}
+.comp-tag:hover{background:var(--blue);color:#fff}
+.comp-tag.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+/* Art Asset Analysis */
+.art-asset-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.art-asset-item{display:flex;align-items:flex-start;gap:10px;padding:12px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:all .15s}
+.art-asset-item:hover{border-color:var(--border-hover);background:var(--bg-secondary)}
+.art-asset-item.selected{border-color:var(--blue);background:var(--blue-bg)}
+.art-asset-checkbox{width:18px;height:18px;border:2px solid var(--border);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:2px;transition:all .15s}
+.art-asset-item.selected .art-asset-checkbox{background:var(--blue);border-color:var(--blue);color:#fff}
+.art-asset-info{flex:1;min-width:0}
+.art-asset-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+.art-asset-desc{font-size:12px;color:var(--text-tertiary);line-height:1.4}
+.art-asset-type{display:inline-block;padding:1px 6px;border-radius:100px;font-size:10px;font-weight:500;background:var(--bg-secondary);color:var(--text-secondary);border:1px solid var(--border);margin-left:6px}
+.art-prompt-box{margin-top:12px;padding:12px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);font-size:13px;line-height:1.6;color:var(--text-secondary);white-space:pre-wrap;word-break:break-word;max-height:300px;overflow-y:auto;display:none}
+.art-prompt-box.show{display:block}
+.art-prompt-box .prompt-label{font-size:11px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.art-prompt-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
 
 /* Toast */
 .toast-container{position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px}
@@ -263,7 +299,7 @@ input,select,textarea{font-family:var(--font)}
 /* Print styles */
 @media print{
   body{background:#fff!important;color:#000!important}
-  .topbar,.toast-container,.result-toolbar,.doc-footer-bar,.toc-sidebar,.footer-bar,.followup-bar,.followup-hint,.polish-bar{display:none!important}
+  .topbar,.toast-container,.result-toolbar,.doc-footer-bar,.toc-sidebar,.footer-bar,.followup-bar,.followup-hint,.polish-bar,.batch-progress{display:none!important}
   .main{padding:0!important}
   .result-layout{max-width:100%!important}
   .doc-content{max-height:none!important;overflow:visible!important;border:none!important;padding:0!important;background:#fff!important;box-shadow:none!important}
@@ -387,6 +423,8 @@ input,select,textarea{font-family:var(--font)}
         <div style="display:flex;gap:8px">
           <button class="btn btn-ghost btn-sm" onclick="openImportModal()" data-i18n="import_doc">导入文档</button>
           <button class="btn btn-ghost btn-sm" onclick="openTemplateModal()" data-i18n="template_library">模板库</button>
+          <button class="btn btn-ghost btn-sm" onclick="openCompResearchModal()" data-i18n="comp_research">竞品调研</button>
+          <button class="btn btn-ghost btn-sm" onclick="openArtAssetModal()" data-i18n="art_asset_analysis">美术资源</button>
         </div>
       </div>
 
@@ -673,6 +711,120 @@ input,select,textarea{font-family:var(--font)}
   </div>
 </div>
 
+<!-- Competitor Research Modal -->
+<div class="modal-overlay" id="compResearchModal">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h2 data-i18n="comp_research_title">竞品快速调研</h2>
+      <button class="btn btn-ghost btn-icon" onclick="closeCompResearchModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px" data-i18n="comp_research_desc">输入竞品游戏名称，AI 将详细拆解其玩法、商业化、美术风格、核心系统等，生成可直接插入文档的竞品分析。</p>
+      <div class="form-group">
+        <label class="form-label" data-i18n="comp_game_name">游戏名称 <span class="required">*</span></label>
+        <input class="form-input" id="compGameName" data-i18n-placeholder="comp_game_name_placeholder" placeholder="如：原神、空洞骑士、星露谷物语...">
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="comp_focus">调研侧重（可选）</label>
+        <div class="comp-tags" id="compFocusTags">
+          <button class="comp-tag" onclick="toggleCompFocus(this)" data-focus="gameplay" data-i18n="comp_focus_gameplay">玩法机制</button>
+          <button class="comp-tag" onclick="toggleCompFocus(this)" data-focus="monetization" data-i18n="comp_focus_monetization">商业化</button>
+          <button class="comp-tag" onclick="toggleCompFocus(this)" data-focus="art" data-i18n="comp_focus_art">美术风格</button>
+          <button class="comp-tag" onclick="toggleCompFocus(this)" data-focus="systems" data-i18n="comp_focus_systems">核心系统</button>
+          <button class="comp-tag" onclick="toggleCompFocus(this)" data-focus="narrative" data-i18n="comp_focus_narrative">叙事设计</button>
+          <button class="comp-tag" onclick="toggleCompFocus(this)" data-focus="ux" data-i18n="comp_focus_ux">UX/UI</button>
+          <button class="comp-tag" onclick="toggleCompFocus(this)" data-focus="all" data-i18n="comp_focus_all">全面分析</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="comp_extra">补充说明（可选）</label>
+        <input class="form-input" id="compExtra" data-i18n-placeholder="comp_extra_placeholder" placeholder="如：重点关注其战斗系统和付费设计...">
+      </div>
+      <div id="compResearchResult" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:13px;font-weight:600;color:var(--text)" data-i18n="comp_result_title">调研结果</span>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm" onclick="copyCompResult()" data-i18n="copy_btn">复制</button>
+            <button class="btn btn-blue btn-sm" onclick="insertCompToDoc()" data-i18n="comp_insert">插入文档</button>
+          </div>
+        </div>
+        <div class="comp-research-result" id="compResearchContent"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeCompResearchModal()" data-i18n="cancel">取消</button>
+      <button class="btn btn-primary" id="compResearchBtn" onclick="startCompResearch()" data-i18n="comp_start">开始调研</button>
+    </div>
+  </div>
+</div>
+
+<!-- Art Asset Analysis Modal -->
+<div class="modal-overlay" id="artAssetModal">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h2 data-i18n="art_asset_title">美术资源分析</h2>
+      <button class="btn btn-ghost btn-icon" onclick="closeArtAssetModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px" data-i18n="art_asset_desc">AI 将根据游戏设计文档分析需要哪些美术资源，列出清单后可选择需要的资源，一键生成可用于 Midjourney / Stable Diffusion / DALL·E 等工具的 Prompt。</p>
+      <div id="artAssetNoDoc" style="display:none">
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px" data-i18n="art_asset_no_doc_hint">请先导入游戏设计文档，或直接在下方粘贴文档内容：</p>
+        <textarea class="form-input" id="artAssetDocInput" style="min-height:120px;font-size:13px" data-i18n-placeholder="art_asset_doc_placeholder" placeholder="在此粘贴游戏设计文档内容..."></textarea>
+        <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+          <button class="btn btn-primary btn-sm" onclick="importArtAssetDoc()" data-i18n="art_import_doc">导入文档</button>
+          <span style="font-size:12px;color:var(--text-tertiary)" data-i18n="art_or">或</span>
+          <label class="btn btn-ghost btn-sm" style="cursor:pointer">
+            <input type="file" accept=".md,.txt" style="display:none" onchange="handleArtAssetFile(event)">
+            <span data-i18n="art_upload_file">上传文件</span>
+          </label>
+        </div>
+      </div>
+      <div id="artAssetImportExtra" style="display:none;border-top:1px solid var(--border);padding-top:12px;margin-top:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:12px;color:var(--text-tertiary)" data-i18n="art_replace_hint">替换文档内容（可选）</span>
+          <button class="btn btn-ghost btn-sm" onclick="toggleArtImportExtra()" id="artImportExtraToggle" data-i18n="art_expand">展开</button>
+        </div>
+        <div id="artImportExtraBody" style="display:none">
+          <textarea class="form-input" id="artAssetDocInputExtra" style="min-height:80px;font-size:13px" data-i18n-placeholder="art_asset_doc_placeholder" placeholder="在此粘贴新的文档内容..."></textarea>
+          <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+            <button class="btn btn-primary btn-sm" onclick="importArtAssetDocExtra()" data-i18n="art_replace_doc">替换文档</button>
+            <label class="btn btn-ghost btn-sm" style="cursor:pointer">
+              <input type="file" accept=".md,.txt" style="display:none" onchange="handleArtAssetFileExtra(event)">
+              <span data-i18n="art_upload_file">上传文件</span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div id="artAssetContent" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <span style="font-size:13px;font-weight:600;color:var(--text)" data-i18n="art_asset_list">资源清单</span>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm" onclick="selectAllArtAssets()" data-i18n="art_select_all">全选</button>
+            <button class="btn btn-ghost btn-sm" onclick="deselectAllArtAssets()" data-i18n="art_deselect_all">取消全选</button>
+          </div>
+        </div>
+        <div class="art-asset-list" id="artAssetList"></div>
+        <div class="art-prompt-actions" id="artPromptActions" style="display:none">
+          <button class="btn btn-blue btn-sm" id="artGenPromptBtn" onclick="generateArtPrompts()" data-i18n="art_gen_prompts">生成 Prompt</button>
+          <span style="font-size:12px;color:var(--text-tertiary)" id="artSelectedCount"></span>
+        </div>
+        <div class="art-prompt-box" id="artPromptBox">
+          <div class="prompt-label" data-i18n="art_prompt_label">生图 Prompt</div>
+          <div id="artPromptContent"></div>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button class="btn btn-primary btn-sm" onclick="copyArtPrompt()" data-i18n="copy_btn">复制</button>
+            <button class="btn btn-secondary btn-sm" onclick="copyAllArtPrompts()" data-i18n="art_copy_all">复制全部</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeArtAssetModal()" data-i18n="cancel">取消</button>
+      <button class="btn btn-primary" id="artAnalyzeBtn" onclick="analyzeArtAssets()" data-i18n="art_start_analyze">开始分析</button>
+    </div>
+  </div>
+</div>
+
 <!-- Footer -->
 <footer class="footer-bar" style="text-align:center;padding:24px;color:var(--text-tertiary);font-size:12px;border-top:1px solid var(--border)">
   <p>GameForge · 游戏企划工坊 &mdash; Designed by <strong style="color:var(--text-secondary)">白芨</strong></p>
@@ -721,6 +873,7 @@ const I18N = {
     edit: '编辑',
     save: '保存',
     copy_all: '复制全部',
+    copy_btn: '复制',
     copy_solo: '复制 SOLO Prompt',
     export_pdf: '导出 PDF',
     export_word: '导出 Word',
@@ -795,6 +948,58 @@ const I18N = {
     toast_gen_complete: '生成完成',
     toast_gen_cancel: '已取消生成',
     toast_import_success: '文档已导入',
+    // Competitor Research
+    comp_research: '竞品调研',
+    comp_research_title: '竞品快速调研',
+    comp_research_desc: '输入竞品游戏名称，AI 将详细拆解其玩法、商业化、美术风格、核心系统等，生成可直接插入文档的竞品分析。',
+    comp_game_name: '游戏名称',
+    comp_game_name_placeholder: '如：原神、空洞骑士、星露谷物语...',
+    comp_focus: '调研侧重（可选）',
+    comp_focus_gameplay: '玩法机制',
+    comp_focus_monetization: '商业化',
+    comp_focus_art: '美术风格',
+    comp_focus_systems: '核心系统',
+    comp_focus_narrative: '叙事设计',
+    comp_focus_ux: 'UX/UI',
+    comp_focus_all: '全面分析',
+    comp_extra: '补充说明（可选）',
+    comp_extra_placeholder: '如：重点关注其战斗系统和付费设计...',
+    comp_start: '开始调研',
+    comp_researching: '调研中...',
+    comp_result_title: '调研结果',
+    comp_insert: '插入文档',
+    comp_inserted: '已插入到文档末尾',
+    toast_comp_done: '竞品调研完成',
+    // Art Asset Analysis
+    art_asset_analysis: '美术资源',
+    art_asset_title: '美术资源分析',
+    art_asset_desc: 'AI 将根据游戏设计文档分析需要哪些美术资源，列出清单后可选择需要的资源，一键生成可用于 Midjourney / Stable Diffusion / DALL·E 等工具的 Prompt。',
+    art_asset_no_doc: '请先生成或导入一份游戏设计文档',
+    art_asset_list: '资源清单',
+    art_select_all: '全选',
+    art_deselect_all: '取消全选',
+    art_gen_prompts: '生成 Prompt',
+    art_prompt_label: '生图 Prompt',
+    art_copy_all: '复制全部',
+    art_start_analyze: '开始分析',
+    art_analyzing: '分析中...',
+    art_gen_prompting: '生成中...',
+    art_no_selection: '请至少选择一个资源',
+    art_analyze_done: '分析完成',
+    art_prompt_done: 'Prompt 生成完成',
+    toast_art_analyze_done: '美术资源分析完成',
+    toast_art_prompt_done: 'Prompt 生成完成',
+    art_asset_no_doc_hint: '请先导入游戏设计文档，或直接在下方粘贴文档内容：',
+    art_asset_doc_placeholder: '在此粘贴游戏设计文档内容...',
+    art_import_doc: '导入文档',
+    art_replace_doc: '替换文档',
+    art_or: '或',
+    art_upload_file: '上传文件',
+    art_start_analyze: '开始分析',
+    art_doc_imported: '文档已导入',
+    art_replace_hint: '替换文档内容（可选）',
+    art_expand: '展开',
+    art_collapse: '收起',
     // Feature: Document Comparison
     compare: '对比',
     select_two: '请选择两份文档',
@@ -852,6 +1057,7 @@ const I18N = {
     edit: 'Edit',
     save: 'Save',
     copy_all: 'Copy All',
+    copy_btn: 'Copy',
     copy_solo: 'Copy SOLO Prompt',
     export_pdf: 'Export PDF',
     export_word: 'Export Word',
@@ -921,6 +1127,58 @@ const I18N = {
     toast_gen_complete: 'Generation complete',
     toast_gen_cancel: 'Generation cancelled',
     toast_import_success: 'Document imported',
+    // Competitor Research
+    comp_research: 'Research',
+    comp_research_title: 'Competitor Research',
+    comp_research_desc: 'Enter a competitor game name. AI will analyze its gameplay, monetization, art style, core systems, and generate a competitor analysis ready to insert into your document.',
+    comp_game_name: 'Game Name',
+    comp_game_name_placeholder: 'e.g.: Genshin Impact, Hollow Knight, Stardew Valley...',
+    comp_focus: 'Focus Areas (optional)',
+    comp_focus_gameplay: 'Gameplay',
+    comp_focus_monetization: 'Monetization',
+    comp_focus_art: 'Art Style',
+    comp_focus_systems: 'Core Systems',
+    comp_focus_narrative: 'Narrative',
+    comp_focus_ux: 'UX/UI',
+    comp_focus_all: 'Full Analysis',
+    comp_extra: 'Additional Notes (optional)',
+    comp_extra_placeholder: 'e.g.: Focus on combat system and monetization...',
+    comp_start: 'Start Research',
+    comp_researching: 'Researching...',
+    comp_result_title: 'Research Result',
+    comp_insert: 'Insert to Doc',
+    comp_inserted: 'Inserted at end of document',
+    toast_comp_done: 'Research complete',
+    // Art Asset Analysis
+    art_asset_analysis: 'Art Assets',
+    art_asset_title: 'Art Asset Analysis',
+    art_asset_desc: 'AI analyzes your GDD to identify needed art assets. Select the ones you need, then generate prompts for Midjourney / Stable Diffusion / DALL·E.',
+    art_asset_no_doc: 'Please generate or import a GDD first',
+    art_asset_list: 'Asset List',
+    art_select_all: 'Select All',
+    art_deselect_all: 'Deselect All',
+    art_gen_prompts: 'Generate Prompts',
+    art_prompt_label: 'Image Generation Prompt',
+    art_copy_all: 'Copy All',
+    art_start_analyze: 'Analyze',
+    art_analyzing: 'Analyzing...',
+    art_gen_prompting: 'Generating...',
+    art_no_selection: 'Please select at least one asset',
+    art_analyze_done: 'Analysis complete',
+    art_prompt_done: 'Prompts generated',
+    toast_art_analyze_done: 'Art asset analysis complete',
+    toast_art_prompt_done: 'Prompts generated',
+    art_asset_no_doc_hint: 'Please import a GDD, or paste the document content below:',
+    art_asset_doc_placeholder: 'Paste your game design document here...',
+    art_import_doc: 'Import',
+    art_replace_doc: 'Replace',
+    art_or: 'or',
+    art_upload_file: 'Upload File',
+    art_start_analyze: 'Analyze',
+    art_doc_imported: 'Document imported',
+    art_replace_hint: 'Replace document content (optional)',
+    art_expand: 'Expand',
+    art_collapse: 'Collapse',
     // Feature: Document Comparison
     compare: 'Compare',
     select_two: 'Select 2 documents',
@@ -970,7 +1228,13 @@ function toggleLang() {
 function applyI18n() {
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
-    if (I18N[currentLang][key]) el.textContent = I18N[currentLang][key];
+    if (I18N[currentLang][key]) {
+      // Only set textContent for leaf nodes (no element children)
+      const hasElementChildren = Array.from(el.children).some(c => c.nodeType === 1);
+      if (!hasElementChildren) {
+        el.textContent = I18N[currentLang][key];
+      }
+    }
   });
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
     const key = el.getAttribute('data-i18n-placeholder');
@@ -1585,7 +1849,10 @@ function importDocument() {
    Prompt Building
    ============================================ */
 function buildDefaultSystemPrompt(genre, players, cycle) {
-  return PROMPT_PRESETS[currentLang].default + `\n\n游戏类型：${genre}，目标玩家：${players}，开发周期：${cycle}`;
+  const suffix = currentLang === 'zh'
+    ? `\n\n游戏类型：${genre}，目标玩家：${players}，开发周期：${cycle}`
+    : `\n\nGame Genre: ${genre}, Target Players: ${players}, Dev Cycle: ${cycle}`;
+  return PROMPT_PRESETS[currentLang].default + suffix;
 }
 
 function buildUserPrompt(idea, genre, players, cycle) {
@@ -1599,25 +1866,51 @@ function buildUserPrompt(idea, genre, players, cycle) {
 /* ============================================
    API Calls (Streaming)
    ============================================ */
-async function streamOpenAI(systemPrompt, userPrompt) {
+async function streamOpenAI(systemPrompt, userPrompt, options = {}) {
   const baseUrl = (config.openai.baseUrl || '').replace(/\/+$/, '');
   if (!baseUrl) throw new Error(t('no_api_url'));
+  
+  // Add timeout: 120s
+  const controller = abortController;
+  const timeoutId = setTimeout(() => { if (controller) controller.abort(); }, 120000);
+  
+  // Append /no_think for Qwen3 models to disable thinking mode
+  const finalUserPrompt = userPrompt + '\n\n/no_think';
   const res = await fetch(baseUrl + '/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + config.openai.apiKey },
     body: JSON.stringify({
       model: config.openai.model || 'gpt-4o-mini',
-      messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
+      messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: finalUserPrompt }],
       stream: true,
-      temperature: 0.7
+      temperature: 0.7,
+      max_tokens: 8192
     }),
-    signal: abortController.signal
+    signal: controller.signal
   });
+  clearTimeout(timeoutId);
   if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error?.message || 'HTTP ' + res.status); }
-  return await readSSEStream(res, 'openai');
+  
+  // Check if the response is actually streaming (some APIs return JSON despite stream:true)
+  const contentType = res.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    // Non-streaming response - parse directly
+    const data = await res.json();
+    let content = data.choices?.[0]?.message?.content || '';
+    content = content.replace(/<think[\s\S]*?<\/think>\s*/gi, '').trim();
+    return content;
+  }
+  
+  let fullText = await readSSEStream(res, 'openai', options);
+  // Filter out Qwen3 <think...</think blocks (in case /no_think is not supported)
+  fullText = fullText.replace(/<think[\s\S]*?<\/think>\s*/gi, '').trim();
+  return fullText;
 }
 
-async function streamClaude(systemPrompt, userPrompt) {
+async function streamClaude(systemPrompt, userPrompt, options = {}) {
+  const controller = abortController;
+  const timeoutId = setTimeout(() => { if (controller) controller.abort(); }, 120000);
+  
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': config.claude.apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
@@ -1628,49 +1921,72 @@ async function streamClaude(systemPrompt, userPrompt) {
       messages: [{ role: 'user', content: userPrompt }],
       stream: true
     }),
-    signal: abortController.signal
+    signal: controller.signal
   });
+  clearTimeout(timeoutId);
   if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error?.message || 'HTTP ' + res.status); }
-  return await readSSEStream(res, 'claude');
+  return await readSSEStream(res, 'claude', options);
 }
 
-async function readSSEStream(res, provider) {
+async function readSSEStream(res, provider, options = {}) {
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let fullText = '';
   let buffer = '';
-  const docEl = document.getElementById('docContent');
+  const targetEl = options.targetEl || document.getElementById('docContent');
+  const renderFn = options.renderFn || renderMarkdown;
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop() || '';
+  // Overall timeout: 180s from start
+  const overallTimer = setTimeout(() => {
+    reader.cancel();
+  }, 180000);
 
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed || !trimmed.startsWith('data:')) continue;
-      const data = trimmed.slice(5).trim();
-      if (data === '[DONE]') continue;
-      try {
-        const json = JSON.parse(data);
-        let delta = '';
-        if (provider === 'openai') {
-          delta = json.choices?.[0]?.delta?.content || '';
-        } else {
-          delta = json.delta?.text || '';
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        if (!trimmed.startsWith('data:')) continue;
+        const data = trimmed.slice(5).trim();
+        if (!data || data === '[DONE]') continue;
+        try {
+          const json = JSON.parse(data);
+          let delta = '';
+          if (provider === 'openai') {
+            delta = json.choices?.[0]?.delta?.content || '';
+          } else {
+            delta = json.delta?.text || '';
+          }
+          if (delta) {
+            fullText += delta;
+            renderFn(fullText);
+            targetEl.classList.add('streaming-cursor');
+            targetEl.scrollTop = targetEl.scrollHeight;
+          }
+        } catch(e) {
+          // Skip non-JSON lines
         }
-        if (delta) {
-          fullText += delta;
-          renderMarkdown(fullText);
-          docEl.classList.add('streaming-cursor');
-          docEl.scrollTop = docEl.scrollHeight;
-        }
-      } catch(e) {}
+      }
     }
+  } catch(e) {
+    if (e.name !== 'AbortError') throw e;
+  } finally {
+    clearTimeout(overallTimer);
   }
-  docEl.classList.remove('streaming-cursor');
+  targetEl.classList.remove('streaming-cursor');
+
+  // If streaming produced nothing, the API might have returned a non-streaming response
+  // This shouldn't happen normally, but as a safety net:
+  if (!fullText && buffer.trim()) {
+    fullText = buffer.trim();
+  }
+
   return fullText;
 }
 
@@ -1801,22 +2117,39 @@ async function regenerateSection(btn) {
 async function streamOpenAIForSection(systemPrompt, userPrompt) {
   const baseUrl = (config.openai.baseUrl || '').replace(/\/+$/, '');
   if (!baseUrl) throw new Error(t('no_api_url'));
+  const timeoutId = setTimeout(() => { if (abortController) abortController.abort(); }, 120000);
+  const finalUserPrompt = userPrompt + '\n\n/no_think';
   const res = await fetch(baseUrl + '/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + config.openai.apiKey },
     body: JSON.stringify({
       model: config.openai.model || 'gpt-4o-mini',
-      messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
+      messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: finalUserPrompt }],
       stream: true,
-      temperature: 0.7
+      temperature: 0.7,
+      max_tokens: 8192
     }),
     signal: abortController.signal
   });
+  clearTimeout(timeoutId);
   if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error?.message || 'HTTP ' + res.status); }
-  return await readSSEStreamNoRender(res, 'openai');
+  
+  // Check if the response is actually streaming
+  const contentType = res.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    const data = await res.json();
+    let content = data.choices?.[0]?.message?.content || '';
+    content = content.replace(/<think[\s\S]*?<\/think>\s*/gi, '').trim();
+    return content;
+  }
+  
+  let fullText = await readSSEStreamNoRender(res, 'openai');
+  fullText = fullText.replace(/<think[\s\S]*?<\/think>\s*/gi, '').trim();
+  return fullText;
 }
 
 async function streamClaudeForSection(systemPrompt, userPrompt) {
+  const timeoutId = setTimeout(() => { if (abortController) abortController.abort(); }, 120000);
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': config.claude.apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
@@ -1829,6 +2162,7 @@ async function streamClaudeForSection(systemPrompt, userPrompt) {
     }),
     signal: abortController.signal
   });
+  clearTimeout(timeoutId);
   if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error?.message || 'HTTP ' + res.status); }
   return await readSSEStreamNoRender(res, 'claude');
 }
@@ -1839,31 +2173,42 @@ async function readSSEStreamNoRender(res, provider) {
   let fullText = '';
   let buffer = '';
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop() || '';
+  // Overall timeout: 180s from start
+  const overallTimer = setTimeout(() => {
+    reader.cancel();
+  }, 180000);
 
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed || !trimmed.startsWith('data:')) continue;
-      const data = trimmed.slice(5).trim();
-      if (data === '[DONE]') continue;
-      try {
-        const json = JSON.parse(data);
-        let delta = '';
-        if (provider === 'openai') {
-          delta = json.choices?.[0]?.delta?.content || '';
-        } else {
-          delta = json.delta?.text || '';
-        }
-        if (delta) {
-          fullText += delta;
-        }
-      } catch(e) {}
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || !trimmed.startsWith('data:')) continue;
+        const data = trimmed.slice(5).trim();
+        if (data === '[DONE]') continue;
+        try {
+          const json = JSON.parse(data);
+          let delta = '';
+          if (provider === 'openai') {
+            delta = json.choices?.[0]?.delta?.content || '';
+          } else {
+            delta = json.delta?.text || '';
+          }
+          if (delta) {
+            fullText += delta;
+          }
+        } catch(e) {}
+      }
     }
+  } catch(e) {
+    if (e.name !== 'AbortError') throw e;
+  } finally {
+    clearTimeout(overallTimer);
   }
   return fullText;
 }
@@ -1971,11 +2316,25 @@ async function aiPolish() {
     let fullText = '';
     if (config.provider === 'openai') {
       fullText = await streamOpenAI(systemPrompt, userPrompt);
+      // Fallback: if streaming returned empty, try non-streaming
+      if (!fullText.trim()) {
+        fullText = await callOpenAIForExtract(systemPrompt, userPrompt);
+      }
     } else {
       fullText = await streamClaude(systemPrompt, userPrompt);
+      if (!fullText.trim()) {
+        fullText = await callClaudeForExtract(systemPrompt, userPrompt);
+      }
     }
     currentDocument = fullText;
-    renderMarkdown(fullText);
+    // Safety net: if streaming rendered content but fullText is empty, extract from DOM
+    if (!currentDocument.trim()) {
+      const docEl = document.getElementById('docContent');
+      if (docEl && docEl.innerText.trim()) {
+        currentDocument = docEl.innerText;
+      }
+    }
+    renderMarkdown(currentDocument);
     extractTOC();
     showToast(t('toast_gen_complete'), 'success');
   } catch(e) {
@@ -2021,11 +2380,19 @@ async function followUp() {
     let fullText = '';
     if (config.provider === 'openai') {
       fullText = await streamOpenAI(systemPrompt, userPrompt);
+      if (!fullText.trim()) fullText = await callOpenAIForExtract(systemPrompt, userPrompt);
     } else {
       fullText = await streamClaude(systemPrompt, userPrompt);
+      if (!fullText.trim()) fullText = await callClaudeForExtract(systemPrompt, userPrompt);
     }
     currentDocument = fullText;
-    renderMarkdown(fullText);
+    if (!currentDocument.trim()) {
+      const docEl = document.getElementById('docContent');
+      if (docEl && docEl.innerText.trim()) {
+        currentDocument = docEl.innerText;
+      }
+    }
+    renderMarkdown(currentDocument);
     extractTOC();
     document.getElementById('streamingBadge').style.display = 'none';
     document.getElementById('resultBadge').style.display = 'inline-flex';
@@ -2192,10 +2559,584 @@ function showToast(message, type = 'info') {
 }
 
 /* ============================================
+   Competitor Research
+   ============================================ */
+let compResearchResult = '';
+let compSelectedFocus = [];
+
+function openCompResearchModal() {
+  document.getElementById('compResearchModal').classList.add('show');
+  document.getElementById('compGameName').value = '';
+  document.getElementById('compExtra').value = '';
+  document.getElementById('compResearchResult').style.display = 'none';
+  document.getElementById('compResearchContent').innerHTML = '';
+  compResearchResult = '';
+  compSelectedFocus = [];
+  document.querySelectorAll('#compFocusTags .comp-tag').forEach(t => t.classList.remove('active'));
+}
+
+function closeCompResearchModal() {
+  if (abortController) { try { abortController.abort(); } catch(e) {} }
+  isGenerating = false;
+  const btn = document.getElementById('compResearchBtn');
+  if (btn) { btn.disabled = false; btn.textContent = t('comp_start'); }
+  document.getElementById('compResearchModal').classList.remove('show');
+}
+
+function toggleCompFocus(btn) {
+  const focus = btn.dataset.focus;
+  if (focus === 'all') {
+    compSelectedFocus = ['all'];
+    document.querySelectorAll('#compFocusTags .comp-tag').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    return;
+  }
+  document.querySelector('#compFocusTags .comp-tag[data-focus="all"]').classList.remove('active');
+  btn.classList.toggle('active');
+  if (btn.classList.contains('active')) {
+    compSelectedFocus.push(focus);
+  } else {
+    compSelectedFocus = compSelectedFocus.filter(f => f !== focus);
+  }
+}
+
+async function startCompResearch() {
+  const gameName = document.getElementById('compGameName').value.trim();
+  if (!gameName) return;
+  if (isGenerating) return;
+
+  isGenerating = true;
+  abortController = new AbortController();
+  const btn = document.getElementById('compResearchBtn');
+  btn.disabled = true;
+  btn.textContent = t('comp_researching');
+
+  document.getElementById('compResearchResult').style.display = 'block';
+  const contentEl = document.getElementById('compResearchContent');
+  contentEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-tertiary)"><div class="loading-spinner" style="margin:0 auto 8px"></div>' + t('comp_researching') + '</div>';
+
+  const focusMap = {
+    zh: { gameplay:'玩法机制', monetization:'商业化模式', art:'美术与视听', systems:'核心系统', narrative:'叙事设计', ux:'UX/UI设计', all:'全面分析' },
+    en: { gameplay:'Gameplay Mechanics', monetization:'Monetization', art:'Art & Audio', systems:'Core Systems', narrative:'Narrative Design', ux:'UX/UI Design', all:'Full Analysis' }
+  };
+  const fm = focusMap[currentLang];
+  const focusText = compSelectedFocus.length > 0 ? compSelectedFocus.map(f => fm[f] || f).join('、') : (currentLang === 'zh' ? '全面分析' : 'Full Analysis');
+  const extra = document.getElementById('compExtra').value.trim();
+
+  const systemPrompt = currentLang === 'zh'
+    ? `你是一位资深的游戏行业分析师。请对用户指定的游戏进行深入的竞品调研和拆解分析。
+
+要求：
+1. 使用 Markdown 格式
+2. 根据用户指定的调研侧重，重点分析以下方面（如果选择全面分析则全部覆盖）：
+   - 游戏概述（基本信息：开发商、发行商、上线时间、平台、类型）
+   - 玩法机制拆解（核心循环、操作方式、进度系统、特色玩法）
+   - 商业化模式（收费方式、内购设计、 Battle Pass、广告等）
+   - 美术与视听风格（整体风格、色彩、音乐、UI 设计特点）
+   - 核心系统设计（角色/装备/经济/社交/公会等系统）
+   - 叙事与世界观（如果适用）
+   - UX/UI 设计亮点
+   - 用户评价与口碑（市场反馈概述）
+   - 核心竞争力总结（3-5 条关键优势）
+   - 对我们项目的启示（可借鉴的设计点和差异化建议）
+3. 分析要具体、有数据支撑，不要泛泛而谈
+4. 表格使用 Markdown 表格格式
+5. 内容要客观专业，适合直接插入游戏设计文档的竞品分析章节`
+    : `You are a senior game industry analyst. Conduct an in-depth competitor research and teardown of the specified game.
+
+Requirements:
+1. Use Markdown format
+2. Based on the user's focus areas, analyze (if "Full Analysis" then cover all):
+   - Game Overview (developer, publisher, release date, platforms, genre)
+   - Gameplay Mechanics (core loop, controls, progression, unique features)
+   - Monetization (pricing, IAP, battle pass, ads, etc.)
+   - Art & Audio Style (overall style, color palette, music, UI design)
+   - Core Systems (character/equipment/economy/social/guild systems)
+   - Narrative & Worldbuilding (if applicable)
+   - UX/UI Design Highlights
+   - User Reception & Market Feedback
+   - Key Competitive Advantages (3-5 core strengths)
+   - Takeaways for Our Project (borrowable design elements and differentiation ideas)
+3. Be specific and data-driven
+4. Use Markdown tables
+5. Professional and objective tone, suitable for direct insertion into a GDD's competitor analysis section`;
+
+  const userPrompt = currentLang === 'zh'
+    ? `请对以下游戏进行详细的竞品调研和拆解分析：\n\n游戏名称：${gameName}\n调研侧重：${focusText}${extra ? '\n补充说明：' + extra : ''}\n\n请生成完整的竞品分析报告。`
+    : `Conduct a detailed competitor research and teardown for:\n\nGame: ${gameName}\nFocus: ${focusText}${extra ? '\nNotes: ' + extra : ''}\n\nGenerate a complete competitor analysis report.`;
+
+  try {
+    let fullText = '';
+    if (config.provider === 'openai') {
+      fullText = await callOpenAIForExtract(systemPrompt, userPrompt);
+    } else {
+      fullText = await callClaudeForExtract(systemPrompt, userPrompt);
+    }
+    compResearchResult = fullText;
+    renderCompResult(fullText);
+    // Save to history
+    saveToHistory(
+      (currentLang === 'zh' ? '竞品调研：' : 'Research: ') + gameName,
+      currentLang === 'zh' ? '竞品调研' : 'Research',
+      focusText, '', fullText
+    );
+    showToast(t('toast_comp_done'), 'success');
+  } catch(e) {
+    if (e.name !== 'AbortError') {
+      showToast(t('gen_fail') + ': ' + e.message, 'error');
+      contentEl.innerHTML = '<p style="color:var(--red)">' + escapeHtml(e.message) + '</p>';
+    }
+  } finally {
+    isGenerating = false;
+    btn.disabled = false;
+    btn.textContent = t('comp_start');
+    abortController = null;
+  }
+}
+
+function renderCompResult(md) {
+  let html = escapeHtml(md);
+  html = html.replace(/^(\|.+\|)\n(\|[-| :]+\|)\n((?:\|.+\|\n?)+)/gm, (match, header, sep, body) => {
+    const headers = header.split('|').filter(c => c.trim()).map(c => '<th>' + c.trim() + '</th>').join('');
+    const rows = body.trim().split('\n').map(row => {
+      const cells = row.split('|').filter(c => c.trim()).map(c => '<td>' + c.trim() + '</td>').join('');
+      return '<tr>' + cells + '</tr>';
+    }).join('');
+    return '<table><thead><tr>' + headers + '</tr></thead><tbody>' + rows + '</tbody></table>';
+  });
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^# (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  html = html.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
+  html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
+  html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
+  html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+  html = html.replace(/<\/blockquote>\n?<blockquote>/g, '');
+  html = html.replace(/\n\n(?!<)/g, '</p><p>');
+  html = '<p>' + html + '</p>';
+  html = html.replace(/<p>\s*<(h[1-3]|ul|ol|table|blockquote)/g, '<$1');
+  html = html.replace(/<\/(h[1-3]|ul|ol|table|blockquote)>\s*<\/p>/g, '</$1>');
+  html = html.replace(/<p>\s*<\/p>/g, '');
+  html = html.replace(/<p>\s*<li>/g, '<li>');
+  html = html.replace(/<\/li>\s*<\/p>/g, '</li>');
+  document.getElementById('compResearchContent').innerHTML = html;
+}
+
+function copyCompResult() {
+  if (!compResearchResult) return;
+  try { navigator.clipboard.writeText(compResearchResult); showToast(t('toast_copied'), 'success'); }
+  catch(e) { fallbackCopy(compResearchResult); showToast(t('toast_copied'), 'success'); }
+}
+
+function insertCompToDoc() {
+  if (!compResearchResult || !currentDocument) {
+    showToast(currentLang === 'zh' ? '请先生成文档' : 'Please generate a document first', 'error');
+    return;
+  }
+  currentDocument = currentDocument + '\n\n' + compResearchResult;
+  renderMarkdown(currentDocument);
+  extractTOC();
+  closeCompResearchModal();
+  showToast(t('comp_inserted'), 'success');
+}
+
+/* ============================================
+   Art Asset Analysis
+   ============================================ */
+let artAssetList = [];
+let artSelectedIds = new Set();
+let artGeneratedPrompts = {};
+
+function openArtAssetModal() {
+  document.getElementById('artAssetModal').classList.add('show');
+  document.getElementById('artAssetList').innerHTML = '';
+  document.getElementById('artPromptBox').classList.remove('show');
+  document.getElementById('artPromptActions').style.display = 'none';
+  document.getElementById('artPromptContent').innerHTML = '';
+  artAssetList = [];
+  artSelectedIds = new Set();
+  artGeneratedPrompts = {};
+
+  if (!currentDocument) {
+    document.getElementById('artAssetNoDoc').style.display = 'block';
+    document.getElementById('artAssetImportExtra').style.display = 'none';
+    document.getElementById('artAssetContent').style.display = 'none';
+    document.getElementById('artAnalyzeBtn').style.display = 'inline-flex';
+    document.getElementById('artAssetDocInput').value = '';
+  } else {
+    document.getElementById('artAssetNoDoc').style.display = 'none';
+    document.getElementById('artAssetImportExtra').style.display = 'block';
+    document.getElementById('artAssetContent').style.display = 'block';
+    document.getElementById('artAnalyzeBtn').style.display = 'inline-flex';
+  }
+}
+
+function closeArtAssetModal() {
+  if (abortController) { try { abortController.abort(); } catch(e) {} }
+  isGenerating = false;
+  const btn = document.getElementById('artAnalyzeBtn');
+  if (btn) { btn.disabled = false; btn.textContent = t('art_start_analyze'); }
+  const genBtn = document.getElementById('artGenPromptBtn');
+  if (genBtn) { genBtn.disabled = false; genBtn.textContent = t('art_gen_prompts'); }
+  document.getElementById('artAssetModal').classList.remove('show');
+}
+
+async function analyzeArtAssets() {
+  if (isGenerating) return;
+
+  // Auto-import from textarea if currentDocument is empty
+  if (!currentDocument) {
+    const docInput = document.getElementById('artAssetDocInput');
+    const docInputExtra = document.getElementById('artAssetDocInputExtra');
+    const pastedContent = (docInput && docInput.value.trim()) || (docInputExtra && docInputExtra.value.trim());
+    if (pastedContent) {
+      currentDocument = pastedContent;
+      // Update UI to show "has document" state
+      document.getElementById('artAssetNoDoc').style.display = 'none';
+      document.getElementById('artAssetImportExtra').style.display = 'block';
+      document.getElementById('artAssetContent').style.display = 'block';
+    } else {
+      showToast(currentLang === 'zh' ? '请先生成或导入一份游戏设计文档' : 'Please generate or import a GDD first', 'error');
+      return;
+    }
+  }
+
+  // Combine current document with competitor research if available
+  let analysisContext = currentDocument;
+  if (compResearchResult) {
+    analysisContext = currentDocument + '\n\n---\n\n' + compResearchResult;
+  }
+
+  isGenerating = true;
+  abortController = new AbortController();
+  const btn = document.getElementById('artAnalyzeBtn');
+  btn.disabled = true;
+  btn.textContent = t('art_analyzing');
+
+  const systemPrompt = currentLang === 'zh'
+    ? `你是一位资深的游戏美术总监。请根据以下游戏设计文档（可能包含竞品调研信息），分析需要制作哪些美术资源。
+
+请以 JSON 数组格式返回，每个元素包含：
+{"id": "唯一英文ID（如 character_hero）", "name": "资源名称", "type": "类型（角色/场景/道具/UI/特效/图标/其他）", "desc": "简要描述（一句话说明这个资源是什么、什么风格）", "priority": "优先级（高/中/低）"}
+
+要求：
+1. 尽可能全面，覆盖文档中提到的所有美术需求
+2. 如果文档包含竞品调研信息，参考竞品的美术风格来推断需要的资源
+3. 每个资源的描述要具体，包含风格、色调、视角等信息
+4. 只返回 JSON 数组，不要其他内容
+5. 数量建议 10-30 个`
+    : `You are a senior game art director. Analyze the following GDD (may include competitor research) and identify all needed art assets.
+
+Return a JSON array where each element contains:
+{"id": "unique_english_id (e.g. character_hero)", "name": "Asset Name", "type": "Type (Character/Scene/Prop/UI/VFX/Icon/Other)", "desc": "Brief description (style, colors, perspective)", "priority": "Priority (High/Medium/Low)"}
+
+Requirements:
+1. Be comprehensive, cover all art needs mentioned in the document
+2. If competitor research is included, reference competitor art styles to infer needed assets
+3. Descriptions should be specific, including style, color palette, perspective
+4. Return ONLY the JSON array, nothing else
+5. Suggest 10-30 assets`;
+
+  try {
+    let resultText = '';
+    if (config.provider === 'openai') {
+      resultText = await callOpenAIForExtract(systemPrompt, analysisContext);
+    } else {
+      resultText = await callClaudeForExtract(systemPrompt, analysisContext);
+    }
+
+    const jsonMatch = resultText.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      artAssetList = JSON.parse(jsonMatch[0]);
+    } else {
+      artAssetList = [];
+    }
+    renderArtAssetList();
+    if (artAssetList.length === 0) {
+      showToast(currentLang === 'zh' ? '未分析到美术资源，请确认文档内容是否包含美术相关描述' : 'No art assets found. Make sure the document contains art-related descriptions.', 'error');
+    } else {
+      showToast(t('toast_art_analyze_done'), 'success');
+    }
+  } catch(e) {
+    if (e.name !== 'AbortError') {
+      showToast(t('gen_fail') + ': ' + e.message, 'error');
+    }
+  } finally {
+    isGenerating = false;
+    btn.disabled = false;
+    btn.textContent = t('art_start_analyze');
+    abortController = null;
+  }
+}
+
+function renderArtAssetList() {
+  const listEl = document.getElementById('artAssetList');
+  if (artAssetList.length === 0) {
+    listEl.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text-tertiary);font-size:13px">' + (currentLang === 'zh' ? '未分析到美术资源' : 'No art assets found') + '</div>';
+    return;
+  }
+  const typeLabels = currentLang === 'zh'
+    ? { '角色': '角色', '场景': '场景', '道具': '道具', 'UI': 'UI', '特效': '特效', '图标': '图标', '其他': '其他' }
+    : {};
+  const priorityColors = { '高': 'var(--red)', '中': 'var(--yellow)', '低': 'var(--text-tertiary)', 'High': 'var(--red)', 'Medium': 'var(--yellow)', 'Low': 'var(--text-tertiary)' };
+
+  listEl.innerHTML = artAssetList.map(item => `
+    <div class="art-asset-item" data-id="${item.id}" onclick="toggleArtAsset('${item.id}')">
+      <div class="art-asset-checkbox">${artSelectedIds.has(item.id) ? '✓' : ''}</div>
+      <div class="art-asset-info">
+        <div class="art-asset-name">${escapeHtml(item.name)}<span class="art-asset-type">${escapeHtml(item.type)}</span></div>
+        <div class="art-asset-desc">${escapeHtml(item.desc)}</div>
+      </div>
+      <span style="font-size:11px;color:${priorityColors[item.priority] || 'var(--text-tertiary)'};font-weight:500;white-space:nowrap">${escapeHtml(item.priority)}</span>
+    </div>
+  `).join('');
+}
+
+function toggleArtAsset(id) {
+  if (artSelectedIds.has(id)) {
+    artSelectedIds.delete(id);
+  } else {
+    artSelectedIds.add(id);
+  }
+  // Update UI
+  document.querySelectorAll('.art-asset-item').forEach(el => {
+    const isSelected = artSelectedIds.has(el.dataset.id);
+    el.classList.toggle('selected', isSelected);
+    el.querySelector('.art-asset-checkbox').textContent = isSelected ? '✓' : '';
+  });
+  // Show/hide generate button
+  const actionsEl = document.getElementById('artPromptActions');
+  if (artSelectedIds.size > 0) {
+    actionsEl.style.display = 'flex';
+    document.getElementById('artSelectedCount').textContent = (currentLang === 'zh' ? '已选 ' : '') + artSelectedIds.size + (currentLang === 'zh' ? ' 项' : ' selected');
+  } else {
+    actionsEl.style.display = 'none';
+  }
+}
+
+function selectAllArtAssets() {
+  artAssetList.forEach(item => artSelectedIds.add(item.id));
+  renderArtAssetList();
+  document.getElementById('artPromptActions').style.display = 'flex';
+  document.getElementById('artSelectedCount').textContent = (currentLang === 'zh' ? '已选 ' : '') + artSelectedIds.size + (currentLang === 'zh' ? ' 项' : ' selected');
+}
+
+function deselectAllArtAssets() {
+  artSelectedIds.clear();
+  renderArtAssetList();
+  document.getElementById('artPromptActions').style.display = 'none';
+}
+
+async function generateArtPrompts() {
+  if (artSelectedIds.size === 0 || isGenerating) return;
+  isGenerating = true;
+  abortController = new AbortController();
+  const btn = document.getElementById('artGenPromptBtn');
+  btn.disabled = true;
+  btn.textContent = t('art_gen_prompting');
+
+  const selectedItems = artAssetList.filter(item => artSelectedIds.has(item.id));
+  const itemsText = selectedItems.map((item, i) => `${i + 1}. [${item.type}] ${item.name}: ${item.desc}`).join('\n');
+
+  const systemPrompt = currentLang === 'zh'
+    ? `你是一位专业的 AI 绘画 Prompt 工程师。用户会给你一组游戏美术资源需求，请为每个资源生成一个高质量的英文 Prompt，可用于 Midjourney / Stable Diffusion / DALL·E 等 AI 绘图工具。
+
+要求：
+1. 每个 Prompt 用英文撰写
+2. 包含：主体描述、风格、色调、光影、构图、质量标签
+3. 质量标签如：masterpiece, best quality, highly detailed, 8k
+4. 风格标签根据游戏类型调整（如 pixel art, anime style, realistic, low poly 等）
+5. 每个 Prompt 50-100 词
+
+请以 JSON 对象格式返回，key 为资源的 id，value 为对应的英文 Prompt。只返回 JSON，不要其他内容。`
+    : `You are a professional AI image prompt engineer. The user will provide a list of game art asset requirements. Generate a high-quality English prompt for each asset, suitable for Midjourney / Stable Diffusion / DALL·E.
+
+Requirements:
+1. Each prompt in English
+2. Include: subject description, style, color palette, lighting, composition, quality tags
+3. Quality tags: masterpiece, best quality, highly detailed, 8k
+4. Style tags based on game type (pixel art, anime style, realistic, low poly, etc.)
+5. Each prompt 50-100 words
+
+Return a JSON object where key = asset id, value = the English prompt. Return ONLY JSON.`;
+
+  const userPrompt = itemsText;
+
+  try {
+    let resultText = '';
+    if (config.provider === 'openai') {
+      resultText = await callOpenAIForExtract(systemPrompt, userPrompt, { temperature: 0.7, maxTokens: selectedItems.length * 300 + 1024 });
+    } else {
+      resultText = await callClaudeForExtract(systemPrompt, userPrompt);
+    }
+
+    const jsonMatch = resultText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
+        const parsed = JSON.parse(jsonMatch[0]);
+        // Try exact id match first, then fuzzy match by name
+        artGeneratedPrompts = {};
+        selectedItems.forEach(item => {
+          if (parsed[item.id]) {
+            artGeneratedPrompts[item.id] = parsed[item.id];
+          } else {
+            // Fuzzy match: find key that contains item.id or item.name
+            const keys = Object.keys(parsed);
+            const matched = keys.find(k => k.toLowerCase().includes(item.id.toLowerCase()) || item.id.toLowerCase().includes(k.toLowerCase()));
+            if (matched) {
+              artGeneratedPrompts[item.id] = parsed[matched];
+            }
+          }
+        });
+        // If no matches at all, try assigning by order (array-like keys or just values)
+        if (Object.keys(artGeneratedPrompts).length === 0) {
+          const values = Object.values(parsed);
+          if (Array.isArray(values) && values.length > 0) {
+            selectedItems.forEach((item, i) => {
+              if (i < values.length) artGeneratedPrompts[item.id] = values[i];
+            });
+          }
+        }
+      } catch(e) {
+        artGeneratedPrompts = {};
+      }
+    } else {
+      artGeneratedPrompts = {};
+    }
+    // If still empty, the raw response might be usable as plain text
+    if (Object.keys(artGeneratedPrompts).length === 0 && resultText.trim()) {
+      // Try to split by numbered items or double newlines
+      const parts = resultText.split(/(?:\n\s*\n|\n(?=\d+\.))/).filter(s => s.trim());
+      selectedItems.forEach((item, i) => {
+        if (i < parts.length) artGeneratedPrompts[item.id] = parts[i].trim();
+      });
+    }
+    renderArtPrompts(selectedItems);
+    if (Object.keys(artGeneratedPrompts).length === 0) {
+      showToast(currentLang === 'zh' ? 'Prompt 生成失败，AI 返回格式异常' : 'Prompt generation failed, AI returned unexpected format', 'error');
+    } else {
+      showToast(t('toast_art_prompt_done'), 'success');
+    }
+  } catch(e) {
+    if (e.name !== 'AbortError') {
+      showToast(t('gen_fail') + ': ' + e.message, 'error');
+    }
+  } finally {
+    isGenerating = false;
+    btn.disabled = false;
+    btn.textContent = t('art_gen_prompts');
+    abortController = null;
+  }
+}
+
+function renderArtPrompts(items) {
+  const box = document.getElementById('artPromptBox');
+  const content = document.getElementById('artPromptContent');
+  box.classList.add('show');
+
+  let html = '';
+  items.forEach(item => {
+    const prompt = artGeneratedPrompts[item.id] || (currentLang === 'zh' ? '（未生成）' : '(not generated)');
+    html += `<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">`;
+    html += `<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px">${escapeHtml(item.name)} <span class="art-asset-type">${escapeHtml(item.type)}</span></div>`;
+    html += `<div style="font-size:13px;color:var(--text-secondary);line-height:1.6">${escapeHtml(prompt)}</div>`;
+    html += `</div>`;
+  });
+  content.innerHTML = html;
+}
+
+function copyArtPrompt() {
+  // Copy the first selected item's prompt
+  const firstId = [...artSelectedIds][0];
+  const prompt = artGeneratedPrompts[firstId];
+  if (!prompt) return;
+  try { navigator.clipboard.writeText(prompt); showToast(t('toast_copied'), 'success'); }
+  catch(e) { fallbackCopy(prompt); showToast(t('toast_copied'), 'success'); }
+}
+
+function copyAllArtPrompts() {
+  const items = artAssetList.filter(item => artSelectedIds.has(item.id));
+  const allPrompts = items.map(item => {
+    const prompt = artGeneratedPrompts[item.id] || '';
+    return `## ${item.name} (${item.type})\n${prompt}`;
+  }).join('\n\n');
+  if (!allPrompts.trim()) return;
+  try { navigator.clipboard.writeText(allPrompts); showToast(t('toast_copied'), 'success'); }
+  catch(e) { fallbackCopy(allPrompts); showToast(t('toast_copied'), 'success'); }
+}
+
+function importArtAssetDoc() {
+  const content = document.getElementById('artAssetDocInput').value.trim();
+  if (!content) {
+    showToast(currentLang === 'zh' ? '请粘贴文档内容' : 'Please paste document content', 'error');
+    return;
+  }
+  currentDocument = content;
+  document.getElementById('artAssetNoDoc').style.display = 'none';
+  document.getElementById('artAssetContent').style.display = 'block';
+  document.getElementById('artAnalyzeBtn').style.display = 'inline-flex';
+  document.getElementById('artAssetImportExtra').style.display = 'block';
+  showToast(t('art_doc_imported'), 'success');
+}
+
+function handleArtAssetFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('artAssetDocInput').value = e.target.result;
+  };
+  reader.readAsText(file);
+}
+
+function toggleArtImportExtra() {
+  const body = document.getElementById('artImportExtraBody');
+  const btn = document.getElementById('artImportExtraToggle');
+  if (body.style.display === 'none') {
+    body.style.display = 'block';
+    btn.textContent = t('art_collapse');
+  } else {
+    body.style.display = 'none';
+    btn.textContent = t('art_expand');
+  }
+}
+
+function importArtAssetDocExtra() {
+  const content = document.getElementById('artAssetDocInputExtra').value.trim();
+  if (!content) {
+    showToast(currentLang === 'zh' ? '请粘贴文档内容' : 'Please paste document content', 'error');
+    return;
+  }
+  currentDocument = content;
+  artAssetList = [];
+  artSelectedIds = new Set();
+  artGeneratedPrompts = {};
+  document.getElementById('artAssetList').innerHTML = '';
+  document.getElementById('artPromptBox').classList.remove('show');
+  document.getElementById('artPromptActions').style.display = 'none';
+  document.getElementById('artImportExtraBody').style.display = 'none';
+  document.getElementById('artImportExtraToggle').textContent = t('art_expand');
+  showToast(t('art_doc_imported'), 'success');
+}
+
+function handleArtAssetFileExtra(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('artAssetDocInputExtra').value = e.target.result;
+  };
+  reader.readAsText(file);
+}
+
+/* ============================================
    Keyboard shortcut
    ============================================ */
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeConfigModal(); closeTemplateModal(); closeImportModal(); closeCompareModal(); closeExtractModal(); }
+  if (e.key === 'Escape') { closeConfigModal(); closeTemplateModal(); closeImportModal(); closeCompareModal(); closeExtractModal(); closeCompResearchModal(); closeArtAssetModal(); }
   if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && !isGenerating) generateDocument();
   if ((e.metaKey || e.ctrlKey) && e.key === 's' && isEditMode) { e.preventDefault(); exitEditMode(); }
 });
@@ -2419,16 +3360,30 @@ async function generateDocument() {
     let fullText = '';
     if (config.provider === 'openai') {
       fullText = await streamOpenAI(systemPrompt, userPrompt);
+      // Fallback: if streaming returned empty, try non-streaming
+      if (!fullText.trim()) {
+        fullText = await callOpenAIForExtract(systemPrompt, userPrompt);
+      }
     } else {
       fullText = await streamClaude(systemPrompt, userPrompt);
+      if (!fullText.trim()) {
+        fullText = await callClaudeForExtract(systemPrompt, userPrompt);
+      }
     }
     currentDocument = fullText;
-    renderMarkdown(fullText);
+    // Safety net: if streaming rendered content but fullText is empty, extract from DOM
+    if (!currentDocument.trim()) {
+      const docEl = document.getElementById('docContent');
+      if (docEl && docEl.innerText.trim()) {
+        currentDocument = docEl.innerText;
+      }
+    }
+    renderMarkdown(currentDocument);
     extractTOC();
     document.getElementById('streamingBadge').style.display = 'none';
     document.getElementById('resultBadge').style.display = 'inline-flex';
     document.getElementById('followupSection').style.display = 'block';
-    saveToHistory(idea, genreText, playersText, cycleText, fullText);
+    saveToHistory(idea, genreText, playersText, cycleText, fullText || currentDocument);
     showToast(t('toast_gen_complete'), 'success');
   } catch(e) {
     if (e.name === 'AbortError') {
@@ -2457,7 +3412,8 @@ async function generateBatch(ideaText) {
   batchResults = [];
   const btn = document.getElementById('generateBtn');
   btn.disabled = true;
-  
+  isGenerating = true;
+  abortController = new AbortController();
   const genre = document.getElementById('gameGenre');
   const players = document.getElementById('targetPlayers');
   const cycle = document.getElementById('devCycle');
@@ -2478,10 +3434,7 @@ async function generateBatch(ideaText) {
   const customPrompt = document.getElementById('customPromptEditor').value.trim();
 
   for (let i = 0; i < ideas.length; i++) {
-    if (!isGenerating) {
-      isGenerating = true;
-      abortController = new AbortController();
-    }
+    abortController = new AbortController();
 
     const idea = ideas[i].trim();
     const progressText = t('generating_progress').replace('{current}', i + 1).replace('{total}', ideas.length);
@@ -2521,34 +3474,40 @@ async function generateBatch(ideaText) {
   }
 
   // Show batch results
-  document.getElementById('streamingBadge').style.display = 'none';
-  document.getElementById('resultBadge').style.display = 'inline-flex';
-  renderBatchResults();
-  showToast(t('batch_gen_complete'), 'success');
-  
-  isGenerating = false;
-  btn.disabled = false;
-  btn.textContent = t('generate');
-  abortController = null;
+  try {
+    document.getElementById('streamingBadge').style.display = 'none';
+    document.getElementById('resultBadge').style.display = 'inline-flex';
+    renderBatchResults();
+    showToast(t('batch_gen_complete'), 'success');
+  } finally {
+    isGenerating = false;
+    btn.disabled = false;
+    btn.textContent = t('generate');
+    abortController = null;
+  }
 }
 
 async function streamOpenAIForBatch(systemPrompt, userPrompt) {
   const baseUrl = (config.openai.baseUrl || '').replace(/\/+$/, '');
   if (!baseUrl) throw new Error(t('no_api_url'));
+  const finalUserPrompt = userPrompt + '\n\n/no_think';
   const res = await fetch(baseUrl + '/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + config.openai.apiKey },
     body: JSON.stringify({
       model: config.openai.model || 'gpt-4o-mini',
-      messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
+      messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: finalUserPrompt }],
       stream: false,
-      temperature: 0.7
+      temperature: 0.7,
+      max_tokens: 8192
     }),
     signal: abortController.signal
   });
   if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error?.message || 'HTTP ' + res.status); }
   const data = await res.json();
-  return data.choices?.[0]?.message?.content || '';
+  let content = data.choices?.[0]?.message?.content || '';
+  content = content.replace(/<think[\s\S]*?<\/think>\s*/gi, '').trim();
+  return content;
 }
 
 async function streamClaudeForBatch(systemPrompt, userPrompt) {
@@ -2624,6 +3583,9 @@ async function extractProjectData() {
     return;
   }
   
+  isGenerating = true;
+  abortController = new AbortController();
+  
   const extractBtn = document.querySelector('[onclick="extractProjectData()"]');
   if (extractBtn) {
     extractBtn.disabled = true;
@@ -2658,6 +3620,8 @@ async function extractProjectData() {
   } catch(e) {
     showToast(t('extract_fail') + ': ' + e.message, 'error');
   } finally {
+    isGenerating = false;
+    abortController = null;
     if (extractBtn) {
       extractBtn.disabled = false;
       extractBtn.textContent = t('extract_data');
@@ -2665,22 +3629,29 @@ async function extractProjectData() {
   }
 }
 
-async function callOpenAIForExtract(systemPrompt, userPrompt) {
+async function callOpenAIForExtract(systemPrompt, userPrompt, options = {}) {
   const baseUrl = (config.openai.baseUrl || '').replace(/\/+$/, '');
   if (!baseUrl) throw new Error(t('no_api_url'));
+  // Append /no_think for Qwen3 models to disable thinking mode
+  const finalUserPrompt = userPrompt + '\n\n/no_think';
   const res = await fetch(baseUrl + '/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + config.openai.apiKey },
     body: JSON.stringify({
       model: config.openai.model || 'gpt-4o-mini',
-      messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
+      messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: finalUserPrompt }],
       stream: false,
-      temperature: 0.3
-    })
+      temperature: options.temperature ?? 0.3,
+      max_tokens: options.maxTokens || 8192
+    }),
+    signal: abortController.signal
   });
   if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error?.message || 'HTTP ' + res.status); }
   const data = await res.json();
-  return data.choices?.[0]?.message?.content || '';
+  let content = data.choices?.[0]?.message?.content || '';
+  // Filter out Qwen3 <think...</think blocks (in case /no_think is not supported)
+  content = content.replace(/<think[\s\S]*?<\/think>\s*/gi, '').trim();
+  return content;
 }
 
 async function callClaudeForExtract(systemPrompt, userPrompt) {
@@ -2693,7 +3664,8 @@ async function callClaudeForExtract(systemPrompt, userPrompt) {
       system: systemPrompt,
       messages: [{ role: 'user', content: userPrompt }],
       stream: false
-    })
+    }),
+    signal: abortController.signal
   });
   if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error?.message || 'HTTP ' + res.status); }
   const data = await res.json();
@@ -2719,6 +3691,7 @@ function renderExtractedData() {
 }
 
 function closeExtractModal() {
+  if (abortController) { abortController.abort(); }
   document.getElementById('extractModal').classList.remove('show');
 }
 
